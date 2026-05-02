@@ -5,8 +5,6 @@ import server
 import datetime
 import stream_server
 
-detected = False
-
 def on_detect():
     """
     Updates state accordingly and starts the video call code.
@@ -75,8 +73,6 @@ def main():
 
             if needs_help(text):
                 print("detected help request")
-                global detected
-                detected = True
                 on_detect()
         except sr.UnknownValueError:
             # Speech detected but unintelligible — not an error
@@ -90,10 +86,8 @@ def main():
     )
 
     try:
-        while not detected:
+        while True:
             pass
-
-        stop_listening(wait_for_stop=False)
     except KeyboardInterrupt:
         print("\nStopping...")
         stop_listening(wait_for_stop=False)
