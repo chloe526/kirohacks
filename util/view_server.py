@@ -33,10 +33,10 @@ DEFAULT_HTTP_PORT = 8080
 
 RECONNECT_DELAY = 2.0   # seconds between reconnect attempts
 
-# Audio params must match robot_control/main.py
-AUDIO_RATE = 44100
+# Audio params must match robot_control/stream_server.py (mono output after extraction)
+AUDIO_RATE = 16000
 AUDIO_CHANNELS = 1
-AUDIO_SAMPLE_WIDTH = 2  # paInt16 = 2 bytes
+AUDIO_SAMPLE_WIDTH = 2  # int16 = 2 bytes
 
 # ---------------------------------------------------------------------------
 # Shared state

@@ -18,6 +18,9 @@ import struct
 import threading
 import time
 
+import contextlib
+import os
+
 import cv2
 import numpy as np
 import pyaudio
@@ -35,10 +38,10 @@ DEFAULT_DEVICE_INDEX = 0
 DEFAULT_PROFILE_INDEX = 186  # -1 = highest resolution
 JPEG_QUALITY = 80           # 0-100; lower = smaller payload
 
-# Audio
-AUDIO_RATE = 44100
-AUDIO_CHANNELS = 1
-AUDIO_FORMAT = pyaudio.paInt16
+# Audio (ReSpeaker mic array — 6ch capture, extract channel 0 for mono output)
+RESPEAKER_RATE = 16000
+RESPEAKER_CHANNELS = 6     # must flash 6_channels_firmware.bin first
+RESPEAKER_WIDTH = 2         # bytes per sample (int16)
 AUDIO_CHUNK = 1024          # frames per buffer
 
 
@@ -50,6 +53,37 @@ def send_frame(conn: socket.socket, data: bytes) -> None:
     """Prefix each message with a 4-byte big-endian length header."""
     header = struct.pack(">I", len(data))
     conn.sendall(header + data)
+
+
+@contextlib.contextmanager
+def ignore_stderr():
+    """Suppress ALSA/PyAudio warnings printed to stderr during init."""
+    devnull = os.open(os.devnull, os.O_WRONLY)
+    old_stderr = os.dup(2)
+    os.dup2(devnull, 2)
+    try:
+        yield
+    finally:
+        os.dup2(old_stderr, 2)
+        os.close(devnull)
+        os.close(old_stderr)
+
+
+def get_respeaker_device_id() -> int:
+    """Find the ReSpeaker mic array device index, or -1 if not found."""
+    with ignore_stderr():
+        p = pyaudio.PyAudio()
+    info = p.get_host_api_info_by_index(0)
+    num_devices = info.get("deviceCount")
+    device_id = -1
+    for i in range(num_devices):
+        dev_info = p.get_device_info_by_host_api_device_index(0, i)
+        if dev_info.get("maxInputChannels") > 0:
+            if "ReSpeaker" in dev_info.get("name", ""):
+                device_id = i
+                break
+    p.terminate()
+    return device_id
 
 
 # ---------------------------------------------------------------------------
@@ -230,36 +264,30 @@ def video_server(
 
 def audio_server(host: str, port: int, stop_event: threading.Event) -> None:
     """
-    Accepts a single client connection and continuously sends raw PCM audio
-    chunks captured from the default microphone.
+    Accepts a single client connection and continuously sends mono PCM audio
+    captured from the ReSpeaker mic array (channel 0 extracted from 6ch input).
     """
-    pa = pyaudio.PyAudio()
-
-    # Find a usable input device
-    input_device_index = None
-    for i in range(pa.get_device_count()):
-        info = pa.get_device_info_by_index(i)
-        if info.get("maxInputChannels", 0) > 0:
-            input_device_index = i
-            print(f"[audio] Using input device {i}: {info['name']}")
-            break
-
-    if input_device_index is None:
-        print("[audio] No input device found — audio streaming disabled.")
-        pa.terminate()
+    respeaker_index = get_respeaker_device_id()
+    if respeaker_index < 0:
+        print("[audio] ReSpeaker device not found — audio streaming disabled.")
         return
+
+    print(f"[audio] Using ReSpeaker device index {respeaker_index}")
+
+    with ignore_stderr():
+        pa = pyaudio.PyAudio()
 
     try:
         stream = pa.open(
-            format=AUDIO_FORMAT,
-            channels=AUDIO_CHANNELS,
-            rate=AUDIO_RATE,
+            rate=RESPEAKER_RATE,
+            format=pa.get_format_from_width(RESPEAKER_WIDTH),
+            channels=RESPEAKER_CHANNELS,
             input=True,
-            input_device_index=input_device_index,
+            input_device_index=respeaker_index,
             frames_per_buffer=AUDIO_CHUNK,
         )
     except OSError as exc:
-        print(f"[audio] Failed to open audio stream: {exc} — audio streaming disabled.")
+        print(f"[audio] Failed to open ReSpeaker stream: {exc} — audio streaming disabled.")
         pa.terminate()
         return
 
@@ -290,8 +318,10 @@ def audio_server(host: str, port: int, stop_event: threading.Event) -> None:
             # ---- stream to this client until it disconnects ----
             try:
                 while not stop_event.is_set():
-                    chunk = stream.read(AUDIO_CHUNK, exception_on_overflow=False)
-                    send_frame(conn, chunk)
+                    data = stream.read(AUDIO_CHUNK, exception_on_overflow=False)
+                    # Extract channel 0 from 6-channel interleaved int16 data
+                    mono = np.frombuffer(data, dtype=np.int16)[0::RESPEAKER_CHANNELS]
+                    send_frame(conn, mono.tobytes())
             except (BrokenPipeError, ConnectionResetError, OSError):
                 print("[audio] Client disconnected.")
             finally:
