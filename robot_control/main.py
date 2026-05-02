@@ -65,6 +65,7 @@ def video_server(host: str, port: int, stop_event: threading.Event) -> None:
     # Configure RealSense pipeline (color only)
     pipeline = rs.pipeline()
     config = rs.config()
+    config.enable_device(list(ctx.query_devices())[0].get_info(rs.camera_info.serial_number))
     config.enable_stream(rs.stream.color, COLOR_WIDTH, COLOR_HEIGHT, rs.format.bgr8, FPS)
     pipeline.start(config)
 
@@ -132,13 +133,34 @@ def audio_server(host: str, port: int, stop_event: threading.Event) -> None:
     chunks captured from the default microphone.
     """
     pa = pyaudio.PyAudio()
-    stream = pa.open(
-        format=AUDIO_FORMAT,
-        channels=AUDIO_CHANNELS,
-        rate=AUDIO_RATE,
-        input=True,
-        frames_per_buffer=AUDIO_CHUNK,
-    )
+
+    # Find a usable input device
+    input_device_index = None
+    for i in range(pa.get_device_count()):
+        info = pa.get_device_info_by_index(i)
+        if info.get("maxInputChannels", 0) > 0:
+            input_device_index = i
+            print(f"[audio] Using input device {i}: {info['name']}")
+            break
+
+    if input_device_index is None:
+        print("[audio] No input device found — audio streaming disabled.")
+        pa.terminate()
+        return
+
+    try:
+        stream = pa.open(
+            format=AUDIO_FORMAT,
+            channels=AUDIO_CHANNELS,
+            rate=AUDIO_RATE,
+            input=True,
+            input_device_index=input_device_index,
+            frames_per_buffer=AUDIO_CHUNK,
+        )
+    except OSError as exc:
+        print(f"[audio] Failed to open audio stream: {exc} — audio streaming disabled.")
+        pa.terminate()
+        return
 
     server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
