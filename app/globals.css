@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Brand */
+  --color-primary:      #3B82F6;   /* blue-500 */
+  --color-primary-dark: #1D4ED8;   /* blue-700 */
+  --color-accent:       #7C3AED;   /* violet-600 */
+
+  /* Status */
+  --color-success:      #22C55E;   /* green-500 */
+  --color-warning:      #F59E0B;   /* amber-500 */
+  --color-danger:       #EF4444;   /* red-500 */
+  --color-danger-glow:  rgba(239, 68, 68, 0.4);
+
+  /* Neutral (dark theme) */
+  --color-surface:      #0F172A;   /* slate-900 */
+  --color-surface-2:    #1E293B;   /* slate-800 */
+  --color-surface-3:    #334155;   /* slate-700 */
+  --color-text:         #F1F5F9;   /* slate-100 */
+  --color-text-muted:   #94A3B8;   /* slate-400 */
+
+  --radius-card:   0.75rem;
+  --radius-button: 0.5rem;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}

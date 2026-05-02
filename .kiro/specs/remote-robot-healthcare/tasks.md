@@ -57,12 +57,12 @@
 
 ---
 
-- [ ] 2.1 Create `lib/apiClient.ts` as a thin `fetch` wrapper that prepends `/api/v1`, sets `Content-Type: application/json`, and throws on non-2xx responses
-- [ ] 2.2 Create `stores/patientStore.ts` (Zustand) with: `patients: Record<string, PatientRecord>`, `isLoadingList`, `listError`, `setPatients()`, `activePatient: PatientRecord | null`, `setActivePatient()`, `patchActivePatient()`, and UI booleans `isReportModalOpen`, `isDispatchDialogOpen` with their open/close actions
-- [ ] 2.3 Build `components/ui/Badge.tsx`: accepts `status: PatientStatus` and renders a colour-coded pill — grey for `IDLE`, amber + `animate-pulse` for `HELP_TRIGGERED`, green for `IN_SESSION`, red for `ESCALATED`
-- [ ] 2.4 Build `components/dashboard/PatientCard.tsx`: displays `patient.name`, `Badge`, `patient.last_updated` via `formatLocalTime`, and a "Join Session" button enabled only when `status === 'HELP_TRIGGERED'`; when `HELP_TRIGGERED` the entire card has a flashing amber border (`animate-pulse border-amber-500`)
-- [ ] 2.5 Build `app/(doctor)/page.tsx` (Dashboard): on mount fetch `GET /api/v1/patients`, store results in `patientStore`, render sorted list (`HELP_TRIGGERED` → `IN_SESSION` → `ESCALATED` → `IDLE`), poll every `POLL_INTERVAL_MS`, show `EmptyState` when list is empty, show inline error on card if join fails
-- [ ] 2.6 Wire "Join Session" button: call `POST /api/v1/patients/:id/join`, optimistically patch `patientStore` with `status: IN_SESSION`, then `router.push('/sessions/{patient_id}')`
+- [x] 2.1 Create `lib/apiClient.ts` as a thin `fetch` wrapper that prepends `/api/v1`, sets `Content-Type: application/json`, and throws on non-2xx responses
+- [x] 2.2 Create `stores/patientStore.ts` (Zustand) with: `patients: Record<string, PatientRecord>`, `isLoadingList`, `listError`, `setPatients()`, `activePatient: PatientRecord | null`, `setActivePatient()`, `patchActivePatient()`, and UI booleans `isReportModalOpen`, `isDispatchDialogOpen` with their open/close actions
+- [x] 2.3 Build `components/ui/Badge.tsx`: accepts `status: PatientStatus` and renders a colour-coded pill — grey for `IDLE`, amber + `animate-pulse` for `HELP_TRIGGERED`, green for `IN_SESSION`, red for `ESCALATED`
+- [x] 2.4 Build `components/dashboard/PatientCard.tsx`: displays `patient.name`, `Badge`, `patient.last_updated` via `formatLocalTime`, and a "Join Session" button enabled only when `status === 'HELP_TRIGGERED'`; when `HELP_TRIGGERED` the entire card has a flashing amber border (`animate-pulse border-amber-500`)
+- [x] 2.5 Build `app/(doctor)/page.tsx` (Dashboard): on mount fetch `GET /api/v1/patients`, store results in `patientStore`, render sorted list (`HELP_TRIGGERED` → `IN_SESSION` → `ESCALATED` → `IDLE`), poll every `POLL_INTERVAL_MS`, show `EmptyState` when list is empty, show inline error on card if join fails
+- [x] 2.6 Wire "Join Session" button: call `POST /api/v1/patients/:id/join`, optimistically patch `patientStore` with `status: IN_SESSION`, then `router.push('/sessions/{patient_id}')`
 
 **Acceptance criteria:**
 - Dashboard renders all three fixture patients with correct badge colours
@@ -96,12 +96,12 @@
 
 ---
 
-- [ ] 3.1 Build `components/session/SessionHeader.tsx`: displays `patient.name`, `SessionStatusBadge`, `SessionTimer` (counting up from `patient.session.started_at`), "End Session" button (opens report modal — stub for now), "Dispatch Emergency Services" button (opens dispatch dialog — stub for now); when `patient.status === 'ESCALATED'` disable dispatch button and relabel "Dispatched"
-- [ ] 3.2 Build `components/session/SessionTimer.tsx`: accepts `startedAt: string | null`; uses `setInterval` (1 s) to count up from `startedAt`; renders `HH:MM:SS`; cleans up interval on unmount
-- [ ] 3.3 Build `components/session/PatientInfoCard.tsx`: renders placeholder avatar, `patient.name`, `patient.address.line1`, `patient.address.line2`; shows "Patient profile unavailable" if `activePatient` is null without blocking the rest of the page
-- [ ] 3.4 Build `components/session/VideoPanel.tsx` (placeholder only): 16:9 dark area, camera icon, "Live video feed — not yet connected" text, `patient.name` overlay bottom-left, connection badge top-right derived from `patient.robot.connection`; no audio logic yet
-- [ ] 3.5 Build `components/session/AlertStatusCard.tsx`: neutral for `IDLE`; amber border + pulse + "Help triggered X ago" counter for `HELP_TRIGGERED`; green border for `IN_SESSION`; red glow + pulse + "ESCALATED — Emergency services dispatched" for `ESCALATED`
-- [ ] 3.6 Assemble `app/(doctor)/sessions/[id]/page.tsx`: fetch `PatientRecord` on mount, store in `patientStore.activePatient`, poll every `POLL_INTERVAL_MS`; render three-panel layout (left: `PatientProfilePanel`, centre: `VideoPanel`, right: `AlertStatusCard` + stubs); when `patient.status` is `IDLE` with `session.ended_at` non-null or `ESCALATED`, replace centre panel with a summary/confirmation message and disable controls
+- [x] 3.1 Build `components/session/SessionHeader.tsx`: displays `patient.name`, `SessionStatusBadge`, `SessionTimer` (counting up from `patient.session.started_at`), "End Session" button (opens report modal — stub for now), "Dispatch Emergency Services" button (opens dispatch dialog — stub for now); when `patient.status === 'ESCALATED'` disable dispatch button and relabel "Dispatched"
+- [x] 3.2 Build `components/session/SessionTimer.tsx`: accepts `startedAt: string | null`; uses `setInterval` (1 s) to count up from `startedAt`; renders `HH:MM:SS`; cleans up interval on unmount
+- [x] 3.3 Build `components/session/PatientInfoCard.tsx`: renders placeholder avatar, `patient.name`, `patient.address.line1`, `patient.address.line2`; shows "Patient profile unavailable" if `activePatient` is null without blocking the rest of the page
+- [x] 3.4 Build `components/session/VideoPanel.tsx` (placeholder only): 16:9 dark area, camera icon, "Live video feed — not yet connected" text, `patient.name` overlay bottom-left, connection badge top-right derived from `patient.robot.connection`; no audio logic yet
+- [x] 3.5 Build `components/session/AlertStatusCard.tsx`: neutral for `IDLE`; amber border + pulse + "Help triggered X ago" counter for `HELP_TRIGGERED`; green border for `IN_SESSION`; red glow + pulse + "ESCALATED — Emergency services dispatched" for `ESCALATED`
+- [x] 3.6 Assemble `app/(doctor)/sessions/[id]/page.tsx`: fetch `PatientRecord` on mount, store in `patientStore.activePatient`, poll every `POLL_INTERVAL_MS`; render three-panel layout (left: `PatientProfilePanel`, centre: `VideoPanel`, right: `AlertStatusCard` + stubs); when `patient.status` is `IDLE` with `session.ended_at` non-null or `ESCALATED`, replace centre panel with a summary/confirmation message and disable controls
 
 **Acceptance criteria:**
 - Session page loads the correct `PatientRecord` for the URL `patient_id`
@@ -133,7 +133,7 @@
 
 ---
 
-- [ ] 4.1 Create `stores/commandStore.ts` (Zustand): `lastCommand: RobotCommand | null`, `commandStatus: 'idle' | 'acknowledged' | 'failed'`, `log: RobotCommand[]` (max `COMMAND_LOG_MAX`), `addCommand(cmd, success)`, `setCommandStatus()`
+- [x] 4.1 Create `stores/commandStore.ts` (Zustand): `lastCommand: RobotCommand | null`, `commandStatus: 'idle' | 'acknowledged' | 'failed'`, `log: RobotCommand[]` (max `COMMAND_LOG_MAX`), `addCommand(cmd, success)`, `setCommandStatus()`
 - [ ] 4.2 Build `components/session/RobotStatusCard.tsx`: online/offline dot from `robot.connection`, battery progress bar (red + "Low Battery" when `robot.battery ≤ 20`), `robot.last_command` label, `robot.last_command_at` via `formatLastCommand`; amber offline banner when `robot.connection === 'offline'`
 - [ ] 4.3 Build `components/session/CommandButton.tsx`: accepts `sessionId`, `action: RobotAction`, `label`, `icon`, `disabled`; on click builds `RobotCommand { session_id, action, issued_at: now() }`, POSTs to `/api/v1/sessions/{sessionId}/commands`, calls `commandStore.addCommand`, patches `patientStore.activePatient.robot.last_command` and `last_command_at`; shows 3 s "Command sent" / "Command failed" indicator
 - [ ] 4.4 Build `components/session/MovementPad.tsx`: renders five `CommandButton` instances for `left`, `right`, `up`, `down`, `stop` in a D-pad layout; all disabled when `robotOnline === false` with tooltip "Robot is offline"
