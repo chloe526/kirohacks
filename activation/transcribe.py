@@ -13,7 +13,7 @@ def main():
 
     # Tune VAD (voice activity detection) parameters to avoid sending
     # tiny or noise-only audio chunks that cause Google Bad Request errors.
-    recognizer.energy_threshold = 300       # minimum RMS energy to count as speech
+    recognizer.energy_threshold = 200       # minimum RMS energy to count as speech
     recognizer.dynamic_energy_threshold = True  # auto-adjust to ambient noise
     recognizer.pause_threshold = 0.8        # seconds of silence that ends a phrase
     recognizer.phrase_threshold = 0.3       # minimum seconds of speaking to count
@@ -38,6 +38,8 @@ def main():
 
         try:
             text = recognizer.recognize_google(audio, language="en-US")
+
+            print(f"heard: {text}")
 
             if needs_help(text):
                 print("detected help request")
