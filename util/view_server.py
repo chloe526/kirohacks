@@ -20,7 +20,7 @@ import socket
 import struct
 import threading
 import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -169,11 +169,13 @@ class StreamHandler(BaseHTTPRequestHandler):
         pass
 
     def do_GET(self):
-        if self.path == "/":
+        # Strip query string for routing
+        path = self.path.split("?")[0]
+        if path == "/":
             self._serve_html()
-        elif self.path == "/video":
+        elif path == "/video":
             self._serve_mjpeg()
-        elif self.path == "/audio":
+        elif path == "/audio":
             self._serve_audio()
         else:
             self.send_error(404)
@@ -263,7 +265,7 @@ def main():
         daemon=True,
     ).start()
 
-    httpd = HTTPServer(("0.0.0.0", args.http_port), StreamHandler)
+    httpd = ThreadingHTTPServer(("0.0.0.0", args.http_port), StreamHandler)
     print(f"Viewer running at http://0.0.0.0:{args.http_port}")
     print(f"Connecting to robot at {args.robot_host} (video:{args.robot_video_port} audio:{args.robot_audio_port})")
 
