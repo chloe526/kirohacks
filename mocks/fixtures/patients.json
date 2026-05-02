@@ -1,0 +1,77 @@
+[
+  {
+    "patient_id": "pat-001",
+    "name": "Margaret Ellis",
+    "address": {
+      "line1": "42 Willow Creek Drive",
+      "line2": "Springfield, IL 62701"
+    },
+    "status": "IDLE",
+    "last_updated": "2024-01-15T09:00:00Z",
+    "help_event": {
+      "triggered_at": null
+    },
+    "robot": {
+      "connection": "online",
+      "battery": 91,
+      "last_command": "stop",
+      "last_command_at": "2024-01-15T08:55:00Z"
+    },
+    "session": {
+      "session_id": null,
+      "active": false,
+      "started_at": null,
+      "ended_at": null
+    }
+  },
+  {
+    "patient_id": "pat-002",
+    "name": "Robert Nguyen",
+    "address": {
+      "line1": "7 Birchwood Lane",
+      "line2": "Austin, TX 78701"
+    },
+    "status": "HELP_TRIGGERED",
+    "last_updated": "2024-01-15T10:28:00Z",
+    "help_event": {
+      "triggered_at": "2024-01-15T10:28:00Z"
+    },
+    "robot": {
+      "connection": "online",
+      "battery": 64,
+      "last_command": "stop",
+      "last_command_at": "2024-01-15T10:27:45Z"
+    },
+    "session": {
+      "session_id": null,
+      "active": false,
+      "started_at": null,
+      "ended_at": null
+    }
+  },
+  {
+    "patient_id": "pat-003",
+    "name": "Dorothy Okafor",
+    "address": {
+      "line1": "1890 Maple Street, Apt 4B",
+      "line2": "Portland, OR 97201"
+    },
+    "status": "IN_SESSION",
+    "last_updated": "2024-01-15T10:31:00Z",
+    "help_event": {
+      "triggered_at": "2024-01-15T10:29:00Z"
+    },
+    "robot": {
+      "connection": "online",
+      "battery": 18,
+      "last_command": "left",
+      "last_command_at": "2024-01-15T10:32:10Z"
+    },
+    "session": {
+      "session_id": "sess-abc456",
+      "active": true,
+      "started_at": "2024-01-15T10:31:00Z",
+      "ended_at": null
+    }
+  }
+]

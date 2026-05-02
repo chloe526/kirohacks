@@ -1,1 +1,11 @@
+<<<<<<< HEAD
 /.DS_Store
+=======
+node_modules/
+.next/
+dist/
+.env
+.env.local
+tsconfig.tsbuildinfo
+>>>>>>> 6f8eadd (feat: set up data foundation)
+tsconfig.tsbuildinfo
