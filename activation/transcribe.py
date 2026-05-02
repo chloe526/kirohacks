@@ -5,7 +5,8 @@ import speech_recognition as sr
 def on_detect():
     pass
 
-def classify() -> Literal
+def needs_help(msg: str):
+    return "help help" in msg
 
 def main():
     recognizer = sr.Recognizer()
@@ -37,7 +38,10 @@ def main():
 
         try:
             text = recognizer.recognize_google(audio, language="en-US")
-            print(f"> {text}")
+
+            if needs_help(text):
+                print("detected help request")
+                on_detect()
         except sr.UnknownValueError:
             # Speech detected but unintelligible — not an error
             pass
