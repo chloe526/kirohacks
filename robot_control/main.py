@@ -65,7 +65,7 @@ def video_server(host: str, port: int, stop_event: threading.Event) -> None:
     # Configure RealSense pipeline (color only)
     pipeline = rs.pipeline()
     config = rs.config()
-    config.enable_device(list(ctx.query_devices())[0].get_info(rs.camera_info.serial_number))
+    config.enable_device(list(rs.context().query_devices())[0].get_info(rs.camera_info.serial_number))
     config.enable_stream(rs.stream.color, COLOR_WIDTH, COLOR_HEIGHT, rs.format.bgr8, FPS)
     pipeline.start(config)
 
