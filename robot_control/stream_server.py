@@ -339,7 +339,7 @@ def audio_server(host: str, port: int, stop_event: threading.Event) -> None:
 # Entry point
 # ---------------------------------------------------------------------------
 
-def start_stream() -> None:
+def main() -> None:
     parser = argparse.ArgumentParser(description="RealSense + audio socket streamer")
     parser.add_argument("--host", default=DEFAULT_HOST, help="Bind address")
     parser.add_argument("--video-port", type=int, default=DEFAULT_VIDEO_PORT)
@@ -381,3 +381,6 @@ def start_stream() -> None:
     audio_thread.join(timeout=5)
     print("Done.")
 
+
+if __name__ == "__main__":
+    main()

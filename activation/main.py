@@ -3,7 +3,6 @@
 import speech_recognition as sr
 import server
 import datetime
-import stream_server
 
 def on_detect():
     """
@@ -16,8 +15,6 @@ def on_detect():
     server.state["help_event"]["triggered"] = time
 
     print(f"Triggered help event at: {time}")
-    
-    stream_server.start_stream()
     
 
 def needs_help(msg: str):
