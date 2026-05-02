@@ -79,8 +79,10 @@ def recv_frame(sock: socket.socket) -> bytes:
 def video_reader(host: str, port: int, stop: threading.Event) -> None:
     global latest_jpeg
     while not stop.is_set():
+        sock = None
         try:
             sock = socket.create_connection((host, port), timeout=5)
+            sock.settimeout(10.0)  # recv timeout
             print(f"[video-reader] Connected to {host}:{port}")
             while not stop.is_set():
                 frame = recv_frame(sock)
@@ -89,13 +91,21 @@ def video_reader(host: str, port: int, stop: threading.Event) -> None:
                 jpeg_event.set()
         except (OSError, EOFError) as exc:
             print(f"[video-reader] {exc} — reconnecting in {RECONNECT_DELAY}s")
-            time.sleep(RECONNECT_DELAY)
+        finally:
+            if sock:
+                try:
+                    sock.close()
+                except OSError:
+                    pass
+        time.sleep(RECONNECT_DELAY)
 
 
 def audio_reader(host: str, port: int, stop: threading.Event) -> None:
     while not stop.is_set():
+        sock = None
         try:
             sock = socket.create_connection((host, port), timeout=5)
+            sock.settimeout(10.0)  # recv timeout
             print(f"[audio-reader] Connected to {host}:{port}")
             while not stop.is_set():
                 chunk = recv_frame(sock)
@@ -108,7 +118,13 @@ def audio_reader(host: str, port: int, stop: threading.Event) -> None:
                 audio_event.set()
         except (OSError, EOFError) as exc:
             print(f"[audio-reader] {exc} — reconnecting in {RECONNECT_DELAY}s")
-            time.sleep(RECONNECT_DELAY)
+        finally:
+            if sock:
+                try:
+                    sock.close()
+                except OSError:
+                    pass
+        time.sleep(RECONNECT_DELAY)
 
 
 # ---------------------------------------------------------------------------

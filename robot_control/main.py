@@ -175,47 +175,50 @@ def video_server(
 
     print(f"[video] Listening on {host}:{port}")
 
-    conn = None
     try:
         while not stop_event.is_set():
-            # Wait for a client
-            if conn is None:
+            # ---- accept a client ----
+            try:
+                conn, addr = server_sock.accept()
+            except socket.timeout:
+                # Drain frames so the pipeline doesn't stall
                 try:
-                    conn, addr = server_sock.accept()
-                    conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-                    print(f"[video] Client connected from {addr}")
-                except socket.timeout:
-                    continue
+                    pipeline.wait_for_frames(timeout_ms=50)
+                except RuntimeError:
+                    pass
+                continue
 
-            # Grab frames
+            conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            conn.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1024 * 1024)
+            print(f"[video] Client connected from {addr}")
+
+            # ---- stream to this client until it disconnects ----
             try:
-                frames = pipeline.wait_for_frames(timeout_ms=5000)
-            except RuntimeError as exc:
-                print(f"[video] Frame timeout: {exc}")
-                continue
+                while not stop_event.is_set():
+                    try:
+                        frames = pipeline.wait_for_frames(timeout_ms=5000)
+                    except RuntimeError as exc:
+                        print(f"[video] Frame timeout: {exc}")
+                        continue
 
-            color_frame = frames.get_color_frame()
-            if not color_frame:
-                continue
+                    color_frame = frames.get_color_frame()
+                    if not color_frame:
+                        continue
 
-            color_image = np.asanyarray(color_frame.get_data())
+                    color_image = np.asanyarray(color_frame.get_data())
+                    ret, jpeg = cv2.imencode(
+                        ".jpg", color_image, [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY]
+                    )
+                    if not ret:
+                        continue
 
-            ret, jpeg = cv2.imencode(
-                ".jpg", color_image, [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY]
-            )
-            if not ret:
-                continue
-
-            try:
-                send_frame(conn, jpeg.tobytes())
+                    send_frame(conn, jpeg.tobytes())
             except (BrokenPipeError, ConnectionResetError, OSError):
                 print("[video] Client disconnected.")
+            finally:
                 conn.close()
-                conn = None
 
     finally:
-        if conn:
-            conn.close()
         server_sock.close()
         pipeline.stop()
         print("[video] Server shut down.")
@@ -268,31 +271,33 @@ def audio_server(host: str, port: int, stop_event: threading.Event) -> None:
 
     print(f"[audio] Listening on {host}:{port}")
 
-    conn = None
     try:
         while not stop_event.is_set():
-            if conn is None:
-                try:
-                    conn, addr = server_sock.accept()
-                    conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-                    print(f"[audio] Client connected from {addr}")
-                except socket.timeout:
-                    continue
-
+            # ---- accept a client ----
             try:
-                chunk = stream.read(AUDIO_CHUNK, exception_on_overflow=False)
-                send_frame(conn, chunk)
+                conn, addr = server_sock.accept()
+            except socket.timeout:
+                # Drain mic buffer so it doesn't grow stale
+                try:
+                    stream.read(AUDIO_CHUNK, exception_on_overflow=False)
+                except OSError:
+                    pass
+                continue
+
+            conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            print(f"[audio] Client connected from {addr}")
+
+            # ---- stream to this client until it disconnects ----
+            try:
+                while not stop_event.is_set():
+                    chunk = stream.read(AUDIO_CHUNK, exception_on_overflow=False)
+                    send_frame(conn, chunk)
             except (BrokenPipeError, ConnectionResetError, OSError):
                 print("[audio] Client disconnected.")
+            finally:
                 conn.close()
-                conn = None
-            except OSError as exc:
-                print(f"[audio] Read error: {exc}")
-                time.sleep(0.01)
 
     finally:
-        if conn:
-            conn.close()
         server_sock.close()
         stream.stop_stream()
         stream.close()
