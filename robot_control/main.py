@@ -31,10 +31,9 @@ DEFAULT_VIDEO_PORT = 9000
 DEFAULT_AUDIO_PORT = 9001
 
 # Video
-COLOR_WIDTH = 1920
-COLOR_HEIGHT = 1080
-FPS = 30
-JPEG_QUALITY = 80          # 0-100; lower = smaller payload
+DEFAULT_DEVICE_INDEX = 0
+DEFAULT_PROFILE_INDEX = 186  # -1 = highest resolution
+JPEG_QUALITY = 80           # 0-100; lower = smaller payload
 
 # Audio
 AUDIO_RATE = 44100
@@ -54,20 +53,119 @@ def send_frame(conn: socket.socket, data: bytes) -> None:
 
 
 # ---------------------------------------------------------------------------
+# RealSense camera initialization
+# ---------------------------------------------------------------------------
+
+def initialize_camera(
+    device_index: int = 0,
+    profile_index: int = -1,
+) -> tuple[rs.pipeline, int, int, int] | None:
+    """
+    Detect a RealSense device, enumerate its color profiles, and start the
+    pipeline.  Returns (pipeline, width, height, fps) on success, or None.
+
+    profile_index: index into the resolution-sorted profile list.
+                   -1 (default) picks the highest resolution.
+    """
+    ctx = rs.context()
+    devices = list(ctx.query_devices())
+
+    if not devices:
+        print("[video] No RealSense devices detected.")
+        return None
+
+    if device_index >= len(devices):
+        print(
+            f"[video] Device index {device_index} out of range. "
+            f"Found {len(devices)} device(s)."
+        )
+        return None
+
+    device = devices[device_index]
+    serial = device.get_info(rs.camera_info.serial_number)
+
+    # Enumerate available color profiles
+    profiles: set[tuple[int, int, int, rs.format]] = set()
+    for sensor in device.sensors:
+        for profile in sensor.get_stream_profiles():
+            if profile.stream_type() != rs.stream.color:
+                continue
+            try:
+                fmt = profile.format()
+                vprofile = profile.as_video_stream_profile()
+                profiles.add((vprofile.width(), vprofile.height(), vprofile.fps(), fmt))
+            except RuntimeError:
+                continue
+
+    sorted_profiles = sorted(
+        profiles, key=lambda x: (x[0] * x[1], x[2], str(x[3]))
+    )
+
+    if not sorted_profiles:
+        print("[video] No color stream profiles found for the selected device.")
+        return None
+
+    # Resolve profile index (-1 = last = highest resolution)
+    if profile_index < 0:
+        profile_index = len(sorted_profiles) - 1
+
+    if profile_index >= len(sorted_profiles):
+        print(
+            f"[video] Profile index {profile_index} out of range. "
+            f"Found {len(sorted_profiles)} profile(s)."
+        )
+        return None
+
+    target_width, target_height, target_fps, target_fmt = sorted_profiles[profile_index]
+
+    pipeline = rs.pipeline()
+    config = rs.config()
+    config.enable_device(serial)
+    config.enable_stream(
+        rs.stream.color,
+        target_width,
+        target_height,
+        target_fmt,
+        target_fps,
+    )
+
+    try:
+        pipeline.start(config)
+    except RuntimeError as exc:
+        print(
+            f"[video] Failed to start stream at {target_width}x{target_height}"
+            f"@{target_fps}, format={target_fmt}: {exc}"
+        )
+        return None
+
+    print(
+        f"[video] Camera initialized: {target_width}x{target_height}"
+        f"@{target_fps} (device {device_index}, profile {profile_index})"
+    )
+    return pipeline, target_width, target_height, target_fps
+
+
+# ---------------------------------------------------------------------------
 # Video streaming thread
 # ---------------------------------------------------------------------------
 
-def video_server(host: str, port: int, stop_event: threading.Event) -> None:
+def video_server(
+    host: str,
+    port: int,
+    stop_event: threading.Event,
+    device_index: int = 0,
+    profile_index: int = -1,
+) -> None:
     """
     Accepts a single client connection and continuously sends JPEG-encoded
     color frames from the RealSense camera.
     """
-    # Configure RealSense pipeline (color only)
-    pipeline = rs.pipeline()
-    config = rs.config()
-    config.enable_device(list(rs.context().query_devices())[0].get_info(rs.camera_info.serial_number))
-    config.enable_stream(rs.stream.color, COLOR_WIDTH, COLOR_HEIGHT, rs.format.bgr8, FPS)
-    pipeline.start(config)
+    result = initialize_camera(device_index, profile_index)
+    if result is None:
+        print("[video] Camera init failed — video streaming disabled.")
+        return
+
+    pipeline, width, height, fps = result
 
     server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -211,13 +309,18 @@ def main() -> None:
     parser.add_argument("--host", default=DEFAULT_HOST, help="Bind address")
     parser.add_argument("--video-port", type=int, default=DEFAULT_VIDEO_PORT)
     parser.add_argument("--audio-port", type=int, default=DEFAULT_AUDIO_PORT)
+    parser.add_argument("--device-index", type=int, default=DEFAULT_DEVICE_INDEX,
+                        help="RealSense device index (default: 0)")
+    parser.add_argument("--profile-index", type=int, default=DEFAULT_PROFILE_INDEX,
+                        help="Color stream profile index, sorted by resolution. "
+                             "-1 = highest (default: -1)")
     args = parser.parse_args()
 
     stop_event = threading.Event()
 
     video_thread = threading.Thread(
         target=video_server,
-        args=(args.host, args.video_port, stop_event),
+        args=(args.host, args.video_port, stop_event, args.device_index, args.profile_index),
         daemon=True,
         name="video-server",
     )
