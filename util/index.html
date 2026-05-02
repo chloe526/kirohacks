@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Robot Stream Viewer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      color: #e0e0e0;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #555;
+      transition: background 0.3s;
+    }
+    .status-dot.live { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+    .status-dot.error { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+
+    .video-wrapper {
+      width: 100%;
+      max-width: 960px;
+      background: #1a1a1a;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #2a2a2a;
+      position: relative;
+    }
+
+    #video-feed {
+      width: 100%;
+      display: block;
+    }
+
+    .no-signal {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 300px;
+      color: #555;
+      font-size: 0.95rem;
+      letter-spacing: 0.05em;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    button {
+      background: #1f1f1f;
+      color: #e0e0e0;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    button:hover { background: #2a2a2a; border-color: #555; }
+    button:active { background: #333; }
+
+    .mute-btn.muted { color: #ef4444; border-color: #ef4444; }
+
+    #status-text {
+      font-size: 0.8rem;
+      color: #666;
+    }
+
+    audio { display: none; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="status-dot" id="dot"></div>
+    <h1>Robot Stream Viewer</h1>
+  </header>
+
+  <div class="video-wrapper">
+    <div class="no-signal" id="no-signal">Waiting for stream…</div>
+    <img id="video-feed" alt="Live video feed" style="display:none;" />
+  </div>
+
+  <div class="controls">
+    <button id="reconnect-btn" onclick="reconnect()">Reconnect</button>
+    <button class="mute-btn" id="mute-btn" onclick="toggleMute()">Mute Audio</button>
+    <span id="status-text">Connecting…</span>
+  </div>
+
+  <audio id="audio-player" autoplay></audio>
+
+  <script>
+    const videoEl   = document.getElementById("video-feed");
+    const noSignal  = document.getElementById("no-signal");
+    const dot       = document.getElementById("dot");
+    const statusTxt = document.getElementById("status-text");
+    const muteBtn   = document.getElementById("mute-btn");
+    const audioEl   = document.getElementById("audio-player");
+
+    let muted = false;
+
+    // -----------------------------------------------------------------------
+    // Video (MJPEG — just point an <img> at the endpoint)
+    // -----------------------------------------------------------------------
+    function startVideo() {
+      const url = `/video?t=${Date.now()}`;
+      videoEl.src = url;
+
+      videoEl.onload = () => {
+        noSignal.style.display = "none";
+        videoEl.style.display  = "block";
+        dot.className = "status-dot live";
+        statusTxt.textContent = "Live";
+      };
+
+      videoEl.onerror = () => {
+        videoEl.style.display  = "none";
+        noSignal.style.display = "flex";
+        dot.className = "status-dot error";
+        statusTxt.textContent = "Video error — try reconnecting";
+      };
+    }
+
+    // -----------------------------------------------------------------------
+    // Audio (streaming WAV)
+    // -----------------------------------------------------------------------
+    function startAudio() {
+      audioEl.src = `/audio?t=${Date.now()}`;
+      audioEl.muted = muted;
+      audioEl.play().catch(() => {
+        // Autoplay blocked — user interaction will resume it
+        statusTxt.textContent = "Click anywhere to enable audio";
+        document.addEventListener("click", () => audioEl.play(), { once: true });
+      });
+    }
+
+    function toggleMute() {
+      muted = !muted;
+      audioEl.muted = muted;
+      muteBtn.textContent = muted ? "Unmute Audio" : "Mute Audio";
+      muteBtn.classList.toggle("muted", muted);
+    }
+
+    function reconnect() {
+      statusTxt.textContent = "Reconnecting…";
+      dot.className = "status-dot";
+      videoEl.style.display  = "none";
+      noSignal.style.display = "flex";
+      noSignal.textContent   = "Reconnecting…";
+
+      audioEl.src = "";
+      videoEl.src = "";
+
+      setTimeout(() => {
+        startVideo();
+        startAudio();
+      }, 300);
+    }
+
+    // -----------------------------------------------------------------------
+    // Start on load
+    // -----------------------------------------------------------------------
+    startVideo();
+    startAudio();
+  </script>
+</body>
+</html>
