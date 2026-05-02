@@ -1,14 +1,41 @@
 #!/usr/bin/env python3
 
 import speech_recognition as sr
+import server
+import datetime
 
 def on_detect():
-    pass
+    """
+    Updates state accordingly and starts the video call code.
+    """
+
+    time = datetime.datetime.now().isoformat()
+
+    server.state["status"] = "HELP_TRIGGERED"
+    server.state["help_event"]["triggered"] = time
+
+    print(f"Triggered help event at: {time}")
+    
 
 def needs_help(msg: str):
+    """
+    Classify a transcript into whether or not a patient needs help.
+    """
+
     return "help help" in msg
 
+
+def set_patient_info():
+    server.state["patient_id"] = "pat-0001"
+    server.state["name"] = "John Doe"
+    server.state["address"]["line1"] = "1234 Imaginary Ave"
+    server.state["address"]["line2"] = "City State 12345"
+    server.state["last_update"] = datetime.datetime.now().isoformat()
+
+
 def main():
+    set_patient_info()
+    server.start_server()
     recognizer = sr.Recognizer()
 
     # Tune VAD (voice activity detection) parameters to avoid sending
