@@ -3,13 +3,6 @@
 from sys import exit
 import speech_recognition as sr
 
-def on_detect():
-    """
-    Updates state accordingly and starts the video call code.
-    """
-
-    exit(0)
-    
 
 def needs_help(msg: str):
     """
@@ -54,7 +47,7 @@ def main():
 
             if needs_help(text):
                 print("detected help request")
-                on_detect()
+                exit(0)
         except sr.UnknownValueError:
             # Speech detected but unintelligible — not an error
             pass
