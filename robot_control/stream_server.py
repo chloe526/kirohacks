@@ -46,7 +46,8 @@ JPEG_QUALITY = 80
 RESPEAKER_RATE = 16000
 RESPEAKER_CHANNELS = 6      # 6-channel firmware required
 RESPEAKER_WIDTH = 2         # int16
-AUDIO_CHUNK = 1024
+AUDIO_CHUNK = 512           # ~32 ms per chunk at 16 kHz — smaller = lower latency
+AUDIO_DRAIN_CHUNKS = 4      # discard this many chunks on connect to flush stale buffer
 
 # ---------------------------------------------------------------------------
 # Shared state — latest JPEG frame
@@ -304,6 +305,13 @@ class StreamHandler(BaseHTTPRequestHandler):
         try:
             self.wfile.write(wav_header())
             self.wfile.flush()
+
+            # Drain any audio that accumulated in the OS/PyAudio buffer before
+            # this client connected — sending stale buffered data is the main
+            # cause of the perceived audio delay.
+            for _ in range(AUDIO_DRAIN_CHUNKS):
+                stream.read(AUDIO_CHUNK, exception_on_overflow=False)
+
             while True:
                 data = stream.read(AUDIO_CHUNK, exception_on_overflow=False)
                 # Extract channel 0 from 6-channel interleaved int16
