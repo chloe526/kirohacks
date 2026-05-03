@@ -1,20 +1,25 @@
 import { NextResponse } from "next/server";
 import patientsFixture from "@/mocks/fixtures/patients.json";
+import { fetchLivePatient } from "@/lib/robotState";
 
 /**
  * GET /api/v1/patients
- * 
- * Returns the list of all patients from the mock fixture.
- * 
- * Requirements:
- * - Req 1.2: Fetch and display list of PatientRecord objects
+ *
+ * Returns the list of all patients.
+ * For `pat-0001`, live robot state from http://10.40.98.25:8081/state is the
+ * source of truth for status, robot, help_event, and session fields.
+ * All other patients are returned from fixture data unchanged.
  */
 export async function GET() {
-  // Simulate network delay (300-600ms) as per mock API spec
-  const delay = Math.floor(Math.random() * 300) + 300;
-  await new Promise((resolve) => setTimeout(resolve, delay));
+  const patients = await Promise.all(
+    patientsFixture.map(async (p) => {
+      if (p.patient_id === "pat-0001") {
+        return fetchLivePatient(p);
+      }
+      return p;
+    })
+  );
 
   console.log("[MOCK API] GET /api/v1/patients → 200");
-
-  return NextResponse.json(patientsFixture);
+  return NextResponse.json(patients);
 }

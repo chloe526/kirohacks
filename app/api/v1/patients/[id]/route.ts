@@ -1,31 +1,26 @@
 import { NextResponse } from "next/server";
 import patientsFixture from "@/mocks/fixtures/patients.json";
+import { fetchLivePatient } from "@/lib/robotState";
 
 /**
  * GET /api/v1/patients/:id
- * 
+ *
  * Returns a single patient by patient_id.
- * 
- * Requirements:
- * - Returns 404 if patient not found
+ * For `pat-0001`, live robot state is the source of truth.
  */
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: { id: string } }
 ) {
-  // Simulate network delay (300-600ms) as per mock API spec
-  const delay = Math.floor(Math.random() * 300) + 300;
-  await new Promise((resolve) => setTimeout(resolve, delay));
+  const base = patientsFixture.find((p) => p.patient_id === params.id);
 
-  const patient = patientsFixture.find((p) => p.patient_id === params.id);
-
-  if (!patient) {
+  if (!base) {
     console.log(`[MOCK API] GET /api/v1/patients/${params.id} → 404`);
-    return NextResponse.json(
-      { error: "Patient not found" },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Patient not found" }, { status: 404 });
   }
+
+  const patient =
+    base.patient_id === "pat-0001" ? await fetchLivePatient(base) : base;
 
   console.log(`[MOCK API] GET /api/v1/patients/${params.id} → 200`);
   return NextResponse.json(patient);

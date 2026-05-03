@@ -23,16 +23,22 @@ export function PatientCard({
 }: PatientCardProps) {
   const { status, robot } = patient;
 
+  // Both HELP_TRIGGERED and CALL_READY need orange attention treatment,
+  // but only CALL_READY allows the clinician to join.
+  const shouldFlashOrange =
+    status === "HELP_TRIGGERED" || status === "CALL_READY";
+  const canJoinSession = status === "CALL_READY";
+
   // ── Card border style ──────────────────────────────────────────────────────
   const cardBorder =
     status === "ESCALATED"
       ? "border-2 border-red-400"
-      : status === "HELP_TRIGGERED"
-        ? "border-2 border-amber-400"
+      : shouldFlashOrange
+        ? "border-2 border-amber-400 animate-pulse"
         : "border border-slate-200";
 
-  // ── Corner notification bell (Escalated / Help Triggered only) ────────────
-  const showCornerBell = status === "ESCALATED" || status === "HELP_TRIGGERED";
+  // ── Corner notification bell (Escalated / Help Triggered / Call Ready) ────
+  const showCornerBell = status === "ESCALATED" || shouldFlashOrange;
   const cornerBellColor =
     status === "ESCALATED"
       ? "text-red-500 bg-red-50"
@@ -58,7 +64,7 @@ export function PatientCard({
     }
     if (status === "CALL_READY") {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-600">
+        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-600">
           <VideoIcon className="h-3 w-3" />
           Call Ready
         </span>
@@ -107,6 +113,18 @@ export function PatientCard({
         </div>
       );
     }
+    if (status === "CALL_READY") {
+      return (
+        <div className="mb-3 flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5">
+          <span className="text-xs font-semibold text-amber-600">
+            Priority: High
+          </span>
+          <span className="text-xs font-medium text-amber-500">
+            Ready to connect
+          </span>
+        </div>
+      );
+    }
     return null;
   };
 
@@ -127,19 +145,31 @@ export function PatientCard({
       : `Last updated: ${formatRelativeTime(patient.last_updated)}`;
 
   // ── Join button ───────────────────────────────────────────────────────────
+  // CALL_READY:     orange, enabled — clinician can join
+  // HELP_TRIGGERED: greyed out, disabled — patient triggered help but session
+  //                 isn't ready yet; clinician must wait for CALL_READY
+  // ESCALATED:      red, enabled — join critical session
+  // others:         default pink, enabled
   const joinButtonClasses =
     status === "ESCALATED"
       ? "bg-red-600 hover:bg-red-700 text-white"
-      : status === "HELP_TRIGGERED"
+      : status === "CALL_READY"
         ? "bg-amber-500 hover:bg-amber-600 text-white"
-        : "bg-pink-500 hover:bg-pink-600 text-white";
+        : status === "HELP_TRIGGERED"
+          ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+          : "bg-pink-500 hover:bg-pink-600 text-white";
+
+  const joinButtonDisabled =
+    isJoining || status === "HELP_TRIGGERED";
 
   const joinButtonLabel =
     status === "ESCALATED"
       ? "Join Critical Session"
-      : status === "HELP_TRIGGERED"
-        ? "Join Urgent Session"
-        : "Join Session";
+      : status === "CALL_READY"
+        ? "Join Session"
+        : status === "HELP_TRIGGERED"
+          ? "Waiting for Patient…"
+          : "Join Session";
 
   return (
     <div className={`relative rounded-xl bg-white p-5 shadow-sm ${cardBorder}`}>
@@ -192,9 +222,9 @@ export function PatientCard({
 
       {/* Join button */}
       <button
-        onClick={() => onJoinSession(patient.patient_id)}
-        disabled={isJoining}
-        className={`w-full rounded-lg py-2.5 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-400 disabled:opacity-60 disabled:cursor-not-allowed ${joinButtonClasses}`}
+        onClick={() => canJoinSession && onJoinSession(patient.patient_id)}
+        disabled={joinButtonDisabled}
+        className={`w-full rounded-lg py-2.5 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-400 disabled:opacity-60 disabled:cursor-not-allowed ${joinButtonClasses}`}
         aria-label={`${joinButtonLabel} for ${patient.name}`}
       >
         {isJoining ? (
