@@ -1,17 +1,19 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useEffect, useState } from 'react';
-import { PatientRecord } from '@/types';
-import { get } from '@/lib/apiClient';
-import { PATIENT_STATUS_POLL_MS } from '@/lib/constants';
-import { formatRelativeTime, formatDuration } from '@/lib/formatters';
+import React from "react";
+import { useEffect, useState } from "react";
+import { PatientRecord } from "@/types";
+import { get } from "@/lib/apiClient";
+import { PATIENT_STATUS_POLL_MS } from "@/lib/constants";
+import { formatRelativeTime, formatDuration } from "@/lib/formatters";
 
 interface PatientStatusPageProps {
   patientId: string;
 }
 
-export default function PatientStatusPage({ patientId }: PatientStatusPageProps) {
+export default function PatientStatusPage({
+  patientId,
+}: PatientStatusPageProps) {
   const [patient, setPatient] = useState<PatientRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +26,10 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
       setPatient(patientRecord);
       setError(null);
     } catch (err) {
-      console.error('Failed to fetch patient:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load patient data');
+      console.error("Failed to fetch patient:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to load patient data",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -41,12 +45,11 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
   // 1-second tick to keep the "Help requested X ago" and "Session in progress for X" counters current
   useEffect(() => {
     const isHelpActive =
-      patient?.status === 'HELP_TRIGGERED' &&
+      patient?.status === "HELP_TRIGGERED" &&
       patient?.help_event?.triggered_at != null;
 
     const isSessionActive =
-      patient?.status === 'IN_SESSION' &&
-      patient?.session?.started_at != null;
+      patient?.status === "IN_SESSION" && patient?.session?.started_at != null;
 
     if (!isHelpActive && !isSessionActive) return;
 
@@ -55,59 +58,69 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
     }, 1000);
 
     return () => clearInterval(tickInterval);
-  }, [patient?.status, patient?.help_event?.triggered_at, patient?.session?.started_at]);
+  }, [
+    patient?.status,
+    patient?.help_event?.triggered_at,
+    patient?.session?.started_at,
+  ]);
 
   // Extract first name from full name
   const getFirstName = (fullName: string): string => {
-    return fullName.split(' ')[0];
+    return fullName.split(" ")[0];
   };
 
   // Get full-page background colour class based on patient status (Req 8.5)
   // Note: test suite asserts these exact class names — keep them stable.
-  const getBackgroundClass = (status: PatientRecord['status']): string => {
+  const getBackgroundClass = (status: PatientRecord["status"]): string => {
     switch (status) {
-      case 'IDLE':
-        return 'bg-slate-900';
-      case 'HELP_TRIGGERED':
-        return 'bg-amber-950';
-      case 'IN_SESSION':
-        return 'bg-green-950';
-      case 'ESCALATED':
-        return 'bg-red-950';
+      case "IDLE":
+        return "bg-slate-900";
+      case "HELP_TRIGGERED":
+        return "bg-amber-950";
+      case "CALL_READY":
+        return "bg-sky-950";
+      case "IN_SESSION":
+        return "bg-green-950";
+      case "ESCALATED":
+        return "bg-red-950";
       default:
-        return 'bg-slate-900';
+        return "bg-slate-900";
     }
   };
 
   // Get status message based on patient status
-  const getStatusMessage = (status: PatientRecord['status']): string => {
+  const getStatusMessage = (status: PatientRecord["status"]): string => {
     switch (status) {
-      case 'IDLE':
-        return 'No active session';
-      case 'HELP_TRIGGERED':
-        return 'Help request received — connecting you to a clinician…';
-      case 'IN_SESSION':
-        return 'A clinician is with you now';
-      case 'ESCALATED':
-        return 'Emergency services have been contacted';
+      case "IDLE":
+        return "No active session";
+      case "HELP_TRIGGERED":
+        return "Help request received — connecting you to a clinician…";
+      case "CALL_READY":
+        return "Call ready — clinician can join now";
+      case "IN_SESSION":
+        return "A clinician is with you now";
+      case "ESCALATED":
+        return "Emergency services have been contacted";
       default:
-        return 'Status unknown';
+        return "Status unknown";
     }
   };
 
   // Get accent color for the status card border
-  const getStatusAccent = (status: PatientRecord['status']): string => {
+  const getStatusAccent = (status: PatientRecord["status"]): string => {
     switch (status) {
-      case 'IDLE':
-        return 'border-slate-200';
-      case 'HELP_TRIGGERED':
-        return 'border-amber-300';
-      case 'IN_SESSION':
-        return 'border-green-300';
-      case 'ESCALATED':
-        return 'border-red-300';
+      case "IDLE":
+        return "border-slate-200";
+      case "HELP_TRIGGERED":
+        return "border-amber-300";
+      case "CALL_READY":
+        return "border-sky-300";
+      case "IN_SESSION":
+        return "border-green-300";
+      case "ESCALATED":
+        return "border-red-300";
       default:
-        return 'border-slate-200';
+        return "border-slate-200";
     }
   };
 
@@ -127,7 +140,7 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="rounded-lg border border-red-200 bg-white p-8 text-center shadow-sm">
           <p className="mb-4 text-base font-medium text-red-600">
-            {error || 'Patient not found'}
+            {error || "Patient not found"}
           </p>
           <button
             onClick={fetchPatient}
@@ -141,7 +154,9 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
   }
 
   return (
-    <div className={`min-h-screen ${getBackgroundClass(patient.status)} px-4 py-12`}>
+    <div
+      className={`min-h-screen ${getBackgroundClass(patient.status)} px-4 py-12`}
+    >
       <div className="mx-auto max-w-lg text-center">
         {/* Greeting with first name */}
         <h1 className="mb-8 text-3xl font-semibold text-slate-100">
@@ -151,25 +166,25 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
         {/* Status card */}
         <div
           className={`rounded-xl border-2 bg-white px-8 py-10 shadow-sm ${getStatusAccent(
-            patient.status
+            patient.status,
           )}`}
         >
           <p className="text-3xl font-medium leading-snug text-slate-800">
             {getStatusMessage(patient.status)}
           </p>
 
-          {patient.status === 'HELP_TRIGGERED' &&
+          {patient.status === "HELP_TRIGGERED" &&
             patient.help_event.triggered_at != null && (
               <p className="mt-4 text-base text-slate-500">
-                Help requested{' '}
+                Help requested{" "}
                 {formatRelativeTime(patient.help_event.triggered_at)}
               </p>
             )}
 
-          {patient.status === 'IN_SESSION' &&
+          {patient.status === "IN_SESSION" &&
             patient.session.started_at != null && (
               <p className="mt-4 text-base text-slate-500">
-                Session in progress for{' '}
+                Session in progress for{" "}
                 {formatDuration(patient.session.started_at)}
               </p>
             )}

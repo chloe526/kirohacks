@@ -5,6 +5,7 @@
 export type PatientStatus =
   | "IDLE"
   | "HELP_TRIGGERED"
+  | "CALL_READY"
   | "IN_SESSION"
   | "ESCALATED";
 

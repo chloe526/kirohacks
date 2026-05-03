@@ -31,6 +31,11 @@ export function SessionStatusBadge({ status }: SessionStatusBadgeProps) {
       className: "bg-amber-50 text-amber-700 ring-1 ring-amber-300",
       animate: true,
     },
+    CALL_READY: {
+      label: "Call Ready",
+      className: "bg-blue-50 text-blue-700 ring-1 ring-blue-300",
+      animate: false,
+    },
     IN_SESSION: {
       label: "In Session",
       className: "bg-green-50 text-green-700 ring-1 ring-green-300",
