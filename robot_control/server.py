@@ -79,3 +79,5 @@ def start_server(host: str = HOST, port: int = PORT) -> HTTPServer:
     thread.start()
     print(f"Server running at http://{host}:{port}/state")
 
+    return httpd
+
