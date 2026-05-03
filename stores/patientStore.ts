@@ -29,6 +29,42 @@ export const usePatientStore = create<PatientStore>((set) => ({
     set({ patients: patientsMap, isLoadingList: false, listError: null });
   },
 
+  /**
+   * Update a single patient entry in the map by patient_id.
+   * All other patients are left untouched.
+   */
+  patchPatient: (patientId: string, patch: Partial<PatientRecord>) => {
+    set((state) => {
+      const existing = state.patients[patientId];
+      if (!existing) return state;
+      return {
+        patients: {
+          ...state.patients,
+          [patientId]: {
+            ...existing,
+            ...patch,
+            address:
+              patch.address !== undefined
+                ? { ...existing.address, ...patch.address }
+                : existing.address,
+            help_event:
+              patch.help_event !== undefined
+                ? { ...existing.help_event, ...patch.help_event }
+                : existing.help_event,
+            robot:
+              patch.robot !== undefined
+                ? { ...existing.robot, ...patch.robot }
+                : existing.robot,
+            session:
+              patch.session !== undefined
+                ? { ...existing.session, ...patch.session }
+                : existing.session,
+          },
+        },
+      };
+    });
+  },
+
   // ─────────────────────────────────────────────────────────────────────────
   // Session page: single active patient
   // ─────────────────────────────────────────────────────────────────────────

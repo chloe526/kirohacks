@@ -98,6 +98,8 @@ export interface PatientStore {
   isLoadingList: boolean;
   listError: string | null;
   setPatients: (records: PatientRecord[]) => void;
+  /** Update a single patient in the map by patient_id without touching others */
+  patchPatient: (patientId: string, patch: Partial<PatientRecord>) => void;
 
   // Session page: single active patient
   activePatient: PatientRecord | null;

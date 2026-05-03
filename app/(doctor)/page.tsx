@@ -137,12 +137,11 @@ export default function DashboardPage() {
     fetchPatients();
   }, []);
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      fetchPatients();
-    }, POLL_INTERVAL_MS);
-    return () => clearInterval(intervalId);
-  }, []);
+  // Note: periodic re-fetching of the full patient list is intentionally
+  // omitted here. John Doe's card is kept live by useRobotStateSync (which
+  // polls http://10.40.98.25:8081/state every 5 s and patches only that
+  // entry). Re-fetching the full list would overwrite the live data with
+  // stale fixture values.
 
   const sortedPatients = getSortedPatients();
   const allPatients = sortedPatients;
