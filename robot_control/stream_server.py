@@ -175,6 +175,7 @@ def camera_capture_loop(pipeline: rs.pipeline, stop_event: threading.Event) -> N
             continue
 
         img = np.asanyarray(color_frame.get_data())
+        img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
         ret, jpeg = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY])
         if not ret:
             continue
