@@ -1,6 +1,7 @@
 import os
 import server
 import datetime
+import stream_server
 
 
 def set_patient_info():
@@ -25,7 +26,11 @@ def main():
             server.state["help_event"]["triggered"] = time
 
             print(f"Triggered help event at: {time}")
-            pass
+
+            stream_server.main()            
+        else:
+            print("error in voice detection")
+            exit(1)
 
 if __name__ == "__main__":
     main()
