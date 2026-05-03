@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import glob
 from sys import exit
 import speech_recognition as sr
 
+should_exit = False
 
 def needs_help(msg: str):
     """
@@ -47,7 +49,8 @@ def main():
 
             if needs_help(text):
                 print("detected help request")
-                exit(0)
+                global should_exit
+                should_exit = True
         except sr.UnknownValueError:
             # Speech detected but unintelligible — not an error
             pass
@@ -60,7 +63,8 @@ def main():
     )
 
     try:
-        while True:
+        global should_exit
+        while not should_exit:
             pass
     except KeyboardInterrupt:
         print("\nStopping...")
