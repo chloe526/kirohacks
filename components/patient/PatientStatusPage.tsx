@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { PatientRecord } from '@/types';
 import { get } from '@/lib/apiClient';
 import { PATIENT_STATUS_POLL_MS } from '@/lib/constants';
+import { formatRelativeTime, formatDuration } from '@/lib/formatters';
 
 interface PatientStatusPageProps {
   patientId: string;
@@ -14,6 +15,8 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
   const [patient, setPatient] = useState<PatientRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Tick counter to force a re-render every second when help timer is active
+  const [, setTick] = useState(0);
 
   const fetchPatient = async () => {
     try {
@@ -39,9 +42,44 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
     return () => clearInterval(interval);
   }, [patientId]);
 
+  // 1-second tick to keep the "Help requested X ago" and "Session in progress for X" counters current
+  useEffect(() => {
+    const isHelpActive =
+      patient?.status === 'HELP_TRIGGERED' &&
+      patient?.help_event?.triggered_at != null;
+
+    const isSessionActive =
+      patient?.status === 'IN_SESSION' &&
+      patient?.session?.started_at != null;
+
+    if (!isHelpActive && !isSessionActive) return;
+
+    const tickInterval = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 1000);
+
+    return () => clearInterval(tickInterval);
+  }, [patient?.status, patient?.help_event?.triggered_at, patient?.session?.started_at]);
+
   // Extract first name from full name
   const getFirstName = (fullName: string): string => {
     return fullName.split(' ')[0];
+  };
+
+  // Get full-page background colour class based on patient status (Req 8.5)
+  const getBackgroundClass = (status: PatientRecord['status']): string => {
+    switch (status) {
+      case 'IDLE':
+        return 'bg-slate-900';
+      case 'HELP_TRIGGERED':
+        return 'bg-amber-950';
+      case 'IN_SESSION':
+        return 'bg-green-950';
+      case 'ESCALATED':
+        return 'bg-red-950';
+      default:
+        return 'bg-slate-900';
+    }
   };
 
   // Get status message based on patient status
@@ -90,7 +128,7 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className={`min-h-screen ${getBackgroundClass(patient.status)} p-8`}>
       <div className="max-w-2xl mx-auto text-center">
         {/* Greeting with first name */}
         <h1 className="text-3xl font-semibold text-slate-800 mb-8">
@@ -102,6 +140,16 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
           <p className="text-3xl font-medium text-slate-800 leading-relaxed">
             {getStatusMessage(patient.status)}
           </p>
+          {patient.status === 'HELP_TRIGGERED' && patient.help_event.triggered_at != null && (
+            <p className="text-lg text-slate-500 mt-3">
+              Help requested {formatRelativeTime(patient.help_event.triggered_at)}
+            </p>
+          )}
+          {patient.status === 'IN_SESSION' && patient.session.started_at != null && (
+            <p className="text-lg text-slate-500 mt-3">
+              Session in progress for {formatDuration(patient.session.started_at)}
+            </p>
+          )}
         </div>
       </div>
     </div>

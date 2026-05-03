@@ -263,10 +263,10 @@
 
 - [x] 8.1 Build `components/patient/PatientStatusPage.tsx`: fetches `PatientRecord` from `GET /api/v1/patients/{patient_id}` on mount; polls every `PATIENT_STATUS_POLL_MS`; displays first name from `patient.name` as greeting at top of page
 - [x] 8.2 Render status message in ≥ 24px font based on `patient.status`: `IDLE` → "No active session", `HELP_TRIGGERED` → "Help request received — connecting you to a clinician…", `IN_SESSION` → "A clinician is with you now", `ESCALATED` → "Emergency services have been contacted"
-- [ ] 8.3 When `patient.status === 'HELP_TRIGGERED'` and `help_event.triggered_at` is non-null, display "Help requested X minutes ago" beneath the status message using `formatRelativeTime`; update every second
-- [ ] 8.4 When `patient.status === 'IN_SESSION'` and `session.started_at` is non-null, display "Session in progress for X minutes" beneath the status message using `formatDuration`; update every second
-- [ ] 8.5 Apply status-appropriate background colour to the full page: neutral for `IDLE`, amber tint for `HELP_TRIGGERED`, green tint for `IN_SESSION`, red tint for `ESCALATED`; ensure no clinical data, robot controls, or report elements are present
-- [ ] 8.6 Wire `app/patient/[id]/status/page.tsx` to render `PatientStatusPage` with the `patient_id` from route params; this route is public (no auth guard)
+- [x] 8.3 When `patient.status === 'HELP_TRIGGERED'` and `help_event.triggered_at` is non-null, display "Help requested X minutes ago" beneath the status message using `formatRelativeTime`; update every second
+- [x] 8.4 When `patient.status === 'IN_SESSION'` and `session.started_at` is non-null, display "Session in progress for X minutes" beneath the status message using `formatDuration`; update every second
+- [x] 8.5 Apply status-appropriate background colour to the full page: neutral for `IDLE`, amber tint for `HELP_TRIGGERED`, green tint for `IN_SESSION`, red tint for `ESCALATED`; ensure no clinical data, robot controls, or report elements are present
+- [x] 8.6 Wire `app/patient/[id]/status/page.tsx` to render `PatientStatusPage` with the `patient_id` from route params; this route is public (no auth guard)
 
 **Acceptance criteria:**
 - Status message is ≥ 24px and updates within 5 seconds of a fixture change
