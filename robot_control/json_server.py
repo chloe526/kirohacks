@@ -113,6 +113,7 @@ class _Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
 
+            import robot_interface
             # update battery 
             robot_interface.update_battery()
         else:

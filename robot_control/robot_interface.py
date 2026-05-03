@@ -148,11 +148,11 @@ def _record_command(cmd: str) -> None:
 
 def update_battery() -> None:
     """Update the robot state with the latest battery reading and timestamp."""
-    now = datetime.datetime.now().isoformat()
-    server.state["last_updated"] = now
-    voltage = _robot.pimu["voltage"]
+    # now = datetime.datetime.now().isoformat()
+    # server.state["last_updated"] = now
+    # voltage = _robot.pimu["voltage"]
     
-    # linear interpolation between 10.0 and 13.8 volts
-    out = math.min(1, math.max(0, ((voltage - 10.0) / 3.8)))
+    # # linear interpolation between 10.0 and 13.8 volts
+    # out = math.min(1, math.max(0, ((voltage - 10.0) / 3.8)))
 
-    server.state["robot"]["battery"] = out
+    # server.state["robot"]["battery"] = out
