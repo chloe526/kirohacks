@@ -153,6 +153,7 @@ def update_battery() -> None:
     voltage = _robot.pimu.status['voltage']
     
     # linear interpolation between 10.0 and 13.8 volts
-    out = math.min(1, math.max(0, ((voltage - 10.0) / 3.8)))
+    out = min(1, max(0, (voltage - 10.0) / 3.8))
+
 
     server.state["robot"]["battery"] = out
