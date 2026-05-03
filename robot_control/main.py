@@ -17,7 +17,7 @@ def main():
     server.start_server()
 
     while True:
-        return_code = os.system("python3 voice_detection.py")
+        return_code = os.system("python3 detect_voice.py")
 
         if return_code == 0:
             time = datetime.datetime.now().isoformat()
