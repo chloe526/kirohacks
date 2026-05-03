@@ -1,5 +1,5 @@
 import os
-import server
+import json_server as server
 import datetime
 import stream_server
 import time

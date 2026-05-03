@@ -28,7 +28,7 @@ import cv2
 import numpy as np
 import pyaudio
 import pyrealsense2 as rs
-import server
+import json_server as server
 import datetime
 
 # ---------------------------------------------------------------------------
