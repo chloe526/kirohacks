@@ -9,19 +9,24 @@ const config: Config = {
   theme: {
     extend: {
       animation: {
-        "pulse-danger": "pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        "glow-danger": "glowDanger 1.5s ease-in-out infinite alternate",
+        "pulse-danger": "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "glow-danger":  "glowDanger 2s ease-in-out infinite alternate",
+        "subtle-pulse": "subtlePulse 2s ease-in-out infinite",
       },
       keyframes: {
         glowDanger: {
-          from: { boxShadow: "0 0 8px rgba(239, 68, 68, 0.4)" },
-          to: { boxShadow: "0 0 24px rgba(239, 68, 68, 0.4)" },
+          from: { boxShadow: "0 0 6px rgba(220, 38, 38, 0.25)" },
+          to:   { boxShadow: "0 0 18px rgba(220, 38, 38, 0.35)" },
+        },
+        subtlePulse: {
+          "0%, 100%": { opacity: "1" },
+          "50%":      { opacity: "0.75" },
         },
       },
       colors: {
-        danger: "var(--color-danger)",
+        danger:  "var(--color-danger)",
         primary: "var(--color-primary)",
-        accent: "var(--color-accent)",
+        accent:  "var(--color-accent)",
       },
     },
   },

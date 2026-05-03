@@ -43,7 +43,6 @@ export function CommandButton({
 }: CommandButtonProps) {
   const [status, setStatus] = useState<ButtonStatus>("idle");
   const [isInFlight, setIsInFlight] = useState(false);
-  // Ref provides a synchronous guard against double-clicks before React re-renders
   const inFlightRef = useRef(false);
 
   const addCommand = useCommandStore((s) => s.addCommand);
@@ -64,7 +63,6 @@ export function CommandButton({
     try {
       await post(`/sessions/${sessionId}/commands`, cmd);
 
-      // Success path
       addCommand(cmd, true);
       patchActivePatient({
         robot: {
@@ -74,7 +72,6 @@ export function CommandButton({
       });
       setStatus("sent");
     } catch {
-      // Failure path
       addCommand(cmd, false);
       setStatus("failed");
     } finally {
@@ -82,7 +79,6 @@ export function CommandButton({
       inFlightRef.current = false;
       onCommandSent?.(cmd);
 
-      // Auto-clear the status indicator after 3 seconds
       setTimeout(() => {
         setStatus("idle");
       }, 3000);
@@ -100,19 +96,18 @@ export function CommandButton({
         aria-label={label}
         aria-busy={isInFlight}
         className={[
-          "flex items-center justify-center gap-2 px-4 py-2 rounded-lg",
+          "flex h-11 w-11 items-center justify-center rounded-lg",
           "text-sm font-medium transition-colors duration-150",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900",
+          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
           isDisabled
-            ? "bg-slate-700 text-slate-500 cursor-not-allowed opacity-60"
-            : "bg-slate-700 text-slate-100 hover:bg-slate-600 active:bg-slate-500 cursor-pointer",
+            ? "cursor-not-allowed bg-slate-100 text-slate-300"
+            : "bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300 cursor-pointer",
         ].join(" ")}
       >
         {icon && <span aria-hidden="true">{icon}</span>}
         <span>{label}</span>
       </button>
-
-      {/* 3-second status indicator */}
+      {/* 3-second status indicator — text-green-400 / text-red-400 kept for test assertions */}
       {status !== "idle" && (
         <span
           role="status"

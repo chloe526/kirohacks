@@ -53,7 +53,7 @@ export function MovementPad({
             sessionId={sessionId}
             action="up"
             label="Move Up"
-            icon={<ArrowUp size={18} aria-hidden="true" />}
+            icon={<ArrowUp size={16} aria-hidden="true" />}
             disabled={isDisabled}
             onCommandSent={onCommandSent}
           />
@@ -67,7 +67,7 @@ export function MovementPad({
             sessionId={sessionId}
             action="left"
             label="Move Left"
-            icon={<ArrowLeft size={18} aria-hidden="true" />}
+            icon={<ArrowLeft size={16} aria-hidden="true" />}
             disabled={isDisabled}
             onCommandSent={onCommandSent}
           />
@@ -80,7 +80,7 @@ export function MovementPad({
             sessionId={sessionId}
             action="stop"
             label="Stop"
-            icon={<StopCircle size={18} aria-hidden="true" />}
+            icon={<StopCircle size={16} aria-hidden="true" />}
             disabled={isDisabled}
             onCommandSent={onCommandSent}
           />
@@ -93,7 +93,7 @@ export function MovementPad({
             sessionId={sessionId}
             action="right"
             label="Move Right"
-            icon={<ArrowRight size={18} aria-hidden="true" />}
+            icon={<ArrowRight size={16} aria-hidden="true" />}
             disabled={isDisabled}
             onCommandSent={onCommandSent}
           />
@@ -107,7 +107,7 @@ export function MovementPad({
             sessionId={sessionId}
             action="down"
             label="Move Down"
-            icon={<ArrowDown size={18} aria-hidden="true" />}
+            icon={<ArrowDown size={16} aria-hidden="true" />}
             disabled={isDisabled}
             onCommandSent={onCommandSent}
           />

@@ -10,17 +10,14 @@ interface PatientInfoCardProps {
 /**
  * PatientInfoCard component displays patient demographic information
  * in the left panel of the Session Page.
- * 
+ *
  * Features:
  * - Placeholder avatar (User icon)
  * - Patient name
  * - Two-line address display
- * 
- * Design notes:
- * - Renders as a card with dark background (slate-800)
- * - Uses consistent spacing and typography with other session components
- * - Gracefully handles null/undefined values by showing fallback message
- * 
+ *
+ * Note: test suite asserts bg-slate-800 and border-slate-700 — keep them stable.
+ *
  * Related requirements:
  * - Requirement 3: Patient Profile Panel
  * - Acceptance Criteria 3.2: Display name, address.line1, address.line2
@@ -31,11 +28,10 @@ export function PatientInfoCard({
   addressLine1,
   addressLine2,
 }: PatientInfoCardProps) {
-  // If any required field is missing, show unavailable message
   if (!name || !addressLine1 || !addressLine2) {
     return (
       <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-        <div className="flex items-center justify-center text-slate-400 py-8">
+        <div className="flex items-center justify-center py-8 text-slate-400">
           <p className="text-sm">Patient profile unavailable</p>
         </div>
       </div>
@@ -44,22 +40,25 @@ export function PatientInfoCard({
 
   return (
     <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-      {/* Placeholder Avatar */}
-      <div className="flex justify-center mb-4">
-        <div className="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center">
-          <User className="w-10 h-10 text-slate-400" aria-hidden="true" />
+      {/* Avatar placeholder */}
+      <div className="mb-4 flex justify-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-700">
+          <User className="h-8 w-8 text-slate-400" aria-hidden="true" />
         </div>
       </div>
 
       {/* Patient Name */}
-      <h2 className="text-xl font-semibold text-slate-100 text-center mb-4">
+      <h2 className="mb-1 text-center text-xl font-semibold text-slate-100">
         {name}
       </h2>
 
+      {/* Divider */}
+      <div className="my-3 border-t border-slate-700" />
+
       {/* Address */}
-      <div className="space-y-1 text-center">
+      <div className="space-y-0.5 text-center">
         <p className="text-sm text-slate-300">{addressLine1}</p>
-        <p className="text-sm text-slate-300">{addressLine2}</p>
+        <p className="text-sm text-slate-400">{addressLine2}</p>
       </div>
     </div>
   );

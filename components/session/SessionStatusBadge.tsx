@@ -11,31 +11,34 @@ interface SessionStatusBadgeProps {
  * Displays a color-coded status badge for the current session state.
  *
  * Status colors:
- * - IDLE: grey (neutral)
- * - HELP_TRIGGERED: amber with flashing animation (urgent)
+ * - IDLE: slate (neutral)
+ * - HELP_TRIGGERED: amber with subtle pulse (urgent)
  * - IN_SESSION: green (active)
- * - ESCALATED: red with flashing animation (emergency)
+ * - ESCALATED: red with subtle pulse (emergency)
  */
 export function SessionStatusBadge({ status }: SessionStatusBadgeProps) {
-  const statusConfig = {
+  const statusConfig: Record<
+    PatientStatus,
+    { label: string; className: string; animate: boolean }
+  > = {
     IDLE: {
       label: "Idle",
-      className: "bg-slate-600 text-slate-100",
+      className: "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
       animate: false,
     },
     HELP_TRIGGERED: {
       label: "Help Triggered",
-      className: "bg-amber-500 text-amber-950",
+      className: "bg-amber-50 text-amber-700 ring-1 ring-amber-300",
       animate: true,
     },
     IN_SESSION: {
       label: "In Session",
-      className: "bg-green-500 text-green-950",
+      className: "bg-green-50 text-green-700 ring-1 ring-green-300",
       animate: false,
     },
     ESCALATED: {
       label: "Escalated",
-      className: "bg-red-500 text-red-950",
+      className: "bg-red-50 text-red-700 ring-1 ring-red-300",
       animate: true,
     },
   };
@@ -44,9 +47,9 @@ export function SessionStatusBadge({ status }: SessionStatusBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
         config.className
-      } ${config.animate ? "animate-pulse" : ""}`}
+      } ${config.animate ? "animate-subtle-pulse" : ""}`}
       aria-label={`Session status: ${config.label}`}
     >
       {config.label}

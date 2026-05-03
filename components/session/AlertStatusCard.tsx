@@ -16,23 +16,22 @@ interface AlertStatusCardProps {
  *
  * Visual states:
  * - IDLE: neutral card, no urgency indicators
- * - HELP_TRIGGERED: amber border, flashing animation, live counter
+ * - HELP_TRIGGERED: amber border, pulse animation, live counter
  * - IN_SESSION: green border, "Session in progress" label
- * - ESCALATED: red border, red glow, pulsing animation, emergency message
+ * - ESCALATED: red border, glow, pulse animation, emergency message
+ *
+ * Note: test suite asserts specific Tailwind classes — keep them stable.
  */
 export function AlertStatusCard({
   status,
   helpTriggeredAt,
 }: AlertStatusCardProps) {
-  // Live counter for HELP_TRIGGERED — updates every second
   const [relativeTime, setRelativeTime] = useState<string>("");
 
   useEffect(() => {
     if (status === "HELP_TRIGGERED" && helpTriggeredAt) {
-      // Initial update
       setRelativeTime(formatRelativeTime(helpTriggeredAt));
 
-      // Update every second
       const interval = setInterval(() => {
         setRelativeTime(formatRelativeTime(helpTriggeredAt));
       }, 1000);
@@ -43,7 +42,7 @@ export function AlertStatusCard({
     }
   }, [status, helpTriggeredAt]);
 
-  // Determine card styling based on status
+  // Note: test suite asserts these exact class strings — keep them stable.
   const getCardStyles = () => {
     switch (status) {
       case "HELP_TRIGGERED":
@@ -58,7 +57,6 @@ export function AlertStatusCard({
     }
   };
 
-  // Determine content based on status
   const renderContent = () => {
     switch (status) {
       case "HELP_TRIGGERED":
@@ -98,9 +96,7 @@ export function AlertStatusCard({
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
-              <h3 className="text-lg font-semibold text-red-400">
-                ESCALATED
-              </h3>
+              <h3 className="text-lg font-semibold text-red-400">ESCALATED</h3>
             </div>
             <p className="text-sm text-red-300 font-medium">
               Emergency services have been dispatched
@@ -118,9 +114,7 @@ export function AlertStatusCard({
                 No Active Alert
               </h3>
             </div>
-            <p className="text-sm text-slate-400">
-              Patient status is normal
-            </p>
+            <p className="text-sm text-slate-400">Patient status is normal</p>
           </div>
         );
     }

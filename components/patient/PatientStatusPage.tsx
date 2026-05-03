@@ -32,13 +32,9 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
   };
 
   useEffect(() => {
-    // Fetch on mount
     fetchPatient();
 
-    // Set up polling interval
     const interval = setInterval(fetchPatient, PATIENT_STATUS_POLL_MS);
-
-    // Cleanup interval on unmount
     return () => clearInterval(interval);
   }, [patientId]);
 
@@ -67,6 +63,7 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
   };
 
   // Get full-page background colour class based on patient status (Req 8.5)
+  // Note: test suite asserts these exact class names — keep them stable.
   const getBackgroundClass = (status: PatientRecord['status']): string => {
     switch (status) {
       case 'IDLE':
@@ -98,12 +95,28 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
     }
   };
 
+  // Get accent color for the status card border
+  const getStatusAccent = (status: PatientRecord['status']): string => {
+    switch (status) {
+      case 'IDLE':
+        return 'border-slate-200';
+      case 'HELP_TRIGGERED':
+        return 'border-amber-300';
+      case 'IN_SESSION':
+        return 'border-green-300';
+      case 'ESCALATED':
+        return 'border-red-300';
+      default:
+        return 'border-slate-200';
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading patient status...</p>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" />
+          <p className="text-sm text-slate-500">Loading patient status…</p>
         </div>
       </div>
     );
@@ -111,14 +124,14 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
 
   if (error || !patient) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 text-lg mb-4">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="rounded-lg border border-red-200 bg-white p-8 text-center shadow-sm">
+          <p className="mb-4 text-base font-medium text-red-600">
             {error || 'Patient not found'}
           </p>
           <button
             onClick={fetchPatient}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Retry
           </button>
@@ -128,28 +141,38 @@ export default function PatientStatusPage({ patientId }: PatientStatusPageProps)
   }
 
   return (
-    <div className={`min-h-screen ${getBackgroundClass(patient.status)} p-8`}>
-      <div className="max-w-2xl mx-auto text-center">
+    <div className={`min-h-screen ${getBackgroundClass(patient.status)} px-4 py-12`}>
+      <div className="mx-auto max-w-lg text-center">
         {/* Greeting with first name */}
-        <h1 className="text-3xl font-semibold text-slate-800 mb-8">
+        <h1 className="mb-8 text-3xl font-semibold text-slate-100">
           Hello, {getFirstName(patient.name)}
         </h1>
 
-        {/* Status message based on patient.status */}
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <p className="text-3xl font-medium text-slate-800 leading-relaxed">
+        {/* Status card */}
+        <div
+          className={`rounded-xl border-2 bg-white px-8 py-10 shadow-sm ${getStatusAccent(
+            patient.status
+          )}`}
+        >
+          <p className="text-3xl font-medium leading-snug text-slate-800">
             {getStatusMessage(patient.status)}
           </p>
-          {patient.status === 'HELP_TRIGGERED' && patient.help_event.triggered_at != null && (
-            <p className="text-lg text-slate-500 mt-3">
-              Help requested {formatRelativeTime(patient.help_event.triggered_at)}
-            </p>
-          )}
-          {patient.status === 'IN_SESSION' && patient.session.started_at != null && (
-            <p className="text-lg text-slate-500 mt-3">
-              Session in progress for {formatDuration(patient.session.started_at)}
-            </p>
-          )}
+
+          {patient.status === 'HELP_TRIGGERED' &&
+            patient.help_event.triggered_at != null && (
+              <p className="mt-4 text-base text-slate-500">
+                Help requested{' '}
+                {formatRelativeTime(patient.help_event.triggered_at)}
+              </p>
+            )}
+
+          {patient.status === 'IN_SESSION' &&
+            patient.session.started_at != null && (
+              <p className="mt-4 text-base text-slate-500">
+                Session in progress for{' '}
+                {formatDuration(patient.session.started_at)}
+              </p>
+            )}
         </div>
       </div>
     </div>

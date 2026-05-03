@@ -36,7 +36,7 @@ interface ReportFormProps {
  *
  * Requirements:
  * - chief_complaint (textarea, max 500 chars, required)
- * - assessment (textarea, max 1000 chars, required)  
+ * - assessment (textarea, max 1000 chars, required)
  * - plan (textarea, max 1000 chars, required)
  * - disposition (radio: "Resolved" / "Follow-up Required" / "Escalate to Emergency Services")
  * - Read-only header showing session_id, patient.name, and elapsed duration
@@ -56,7 +56,6 @@ export function ReportForm({
   const [plan, setPlan] = useState("");
   const [disposition, setDisposition] = useState<Disposition | "">("");
 
-  // Local validation state
   const [localErrors, setLocalErrors] = useState<{
     chief_complaint?: string;
     assessment?: string;
@@ -68,7 +67,7 @@ export function ReportForm({
 
   const validateField = (field: string, value: string) => {
     const errors = { ...localErrors };
-    
+
     switch (field) {
       case "chief_complaint":
         if (!value.trim()) {
@@ -99,16 +98,15 @@ export function ReportForm({
         }
         break;
     }
-    
+
     setLocalErrors(errors);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate all fields
+
     const errors: typeof localErrors = {};
-    
+
     if (!chiefComplaint.trim()) {
       errors.chief_complaint = "Chief complaint is required";
     }
@@ -121,15 +119,13 @@ export function ReportForm({
     if (!disposition) {
       errors.disposition = "Disposition is required";
     }
-    
+
     setLocalErrors(errors);
-    
-    // If there are validation errors, don't submit
+
     if (Object.keys(errors).length > 0) {
       return;
     }
-    
-    // Submit the form data
+
     onSubmit({
       chief_complaint: chiefComplaint.trim(),
       assessment: assessment.trim(),
@@ -138,7 +134,6 @@ export function ReportForm({
     });
   };
 
-  // Combine local and server validation errors
   const getFieldError = (field: keyof typeof localErrors) => {
     return validationErrors[field] || localErrors[field];
   };
@@ -149,25 +144,34 @@ export function ReportForm({
     { value: "escalated", label: "Escalate to Emergency Services" },
   ] as const;
 
+  // Shared textarea class builder
+  const textareaClass = (hasError: boolean) =>
+    `w-full rounded-lg border px-3 py-2 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:outline-none focus:ring-2 disabled:bg-slate-50 disabled:text-slate-400 ${
+      hasError
+        ? "border-red-300 bg-red-50/50 focus:border-red-400 focus:ring-red-200"
+        : "border-slate-300 bg-white focus:border-blue-500 focus:ring-blue-200"
+    }`;
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Read-only Header */}
-      <div className="rounded-lg bg-slate-700/50 p-4">
-        <h3 className="mb-3 text-lg font-semibold text-slate-100">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Read-only Session Header */}
+      <div className="rounded-lg bg-slate-50 p-4 ring-1 ring-slate-200">
+        {/* "Session Report" heading kept for test assertion */}
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">
           Session Report
         </h3>
-        <div className="grid grid-cols-1 gap-2 text-sm">
+        <div className="grid grid-cols-1 gap-1.5 text-sm">
           <div className="flex justify-between">
-            <span className="text-slate-400">Session ID:</span>
-            <span className="font-mono text-slate-200">{sessionId}</span>
+            <span className="text-slate-500">Session ID</span>
+            <span className="font-mono text-slate-700">{sessionId}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Patient:</span>
-            <span className="text-slate-200">{patientName}</span>
+            <span className="text-slate-500">Patient</span>
+            <span className="font-medium text-slate-700">{patientName}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Duration:</span>
-            <span className="text-slate-200">{elapsedDuration}</span>
+            <span className="text-slate-500">Duration</span>
+            <span className="text-slate-700">{elapsedDuration}</span>
           </div>
         </div>
       </div>
@@ -176,9 +180,12 @@ export function ReportForm({
       <div>
         <label
           htmlFor="chief-complaint"
-          className="mb-2 block text-sm font-medium text-slate-300"
+          className="mb-1.5 block text-sm font-medium text-slate-700"
         >
-          Chief Complaint *
+          Chief Complaint{" "}
+          <span className="text-red-500" aria-hidden="true">
+            *
+          </span>
         </label>
         <textarea
           id="chief-complaint"
@@ -187,12 +194,8 @@ export function ReportForm({
             setChiefComplaint(e.target.value);
             validateField("chief_complaint", e.target.value);
           }}
-          placeholder="Patient's primary concern or reason for the session..."
-          className={`w-full rounded-lg border px-3 py-2 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 ${
-            getFieldError("chief_complaint")
-              ? "border-red-500 bg-red-500/10 focus:border-red-500 focus:ring-red-500"
-              : "border-slate-600 bg-slate-700 focus:border-blue-500 focus:ring-blue-500"
-          }`}
+          placeholder="Patient's primary concern or reason for the session…"
+          className={textareaClass(!!getFieldError("chief_complaint"))}
           rows={3}
           maxLength={CHIEF_COMPLAINT_MAX_CHARS}
           disabled={isSubmitting}
@@ -200,18 +203,18 @@ export function ReportForm({
         />
         <div className="mt-1 flex justify-between text-xs">
           {getFieldError("chief_complaint") ? (
-            <span className="text-red-400">
+            <span className="text-red-600">
               {getFieldError("chief_complaint")}
             </span>
           ) : (
-            <span></span>
+            <span />
           )}
           <span
-            className={`${
+            className={
               chiefComplaint.length > CHIEF_COMPLAINT_MAX_CHARS * 0.9
-                ? "text-amber-400"
+                ? "text-amber-600"
                 : "text-slate-400"
-            }`}
+            }
           >
             {chiefComplaint.length}/{CHIEF_COMPLAINT_MAX_CHARS}
           </span>
@@ -222,9 +225,12 @@ export function ReportForm({
       <div>
         <label
           htmlFor="assessment"
-          className="mb-2 block text-sm font-medium text-slate-300"
+          className="mb-1.5 block text-sm font-medium text-slate-700"
         >
-          Assessment *
+          Assessment{" "}
+          <span className="text-red-500" aria-hidden="true">
+            *
+          </span>
         </label>
         <textarea
           id="assessment"
@@ -233,12 +239,8 @@ export function ReportForm({
             setAssessment(e.target.value);
             validateField("assessment", e.target.value);
           }}
-          placeholder="Clinical assessment and observations..."
-          className={`w-full rounded-lg border px-3 py-2 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 ${
-            getFieldError("assessment")
-              ? "border-red-500 bg-red-500/10 focus:border-red-500 focus:ring-red-500"
-              : "border-slate-600 bg-slate-700 focus:border-blue-500 focus:ring-blue-500"
-          }`}
+          placeholder="Clinical assessment and observations…"
+          className={textareaClass(!!getFieldError("assessment"))}
           rows={4}
           maxLength={ASSESSMENT_MAX_CHARS}
           disabled={isSubmitting}
@@ -246,18 +248,16 @@ export function ReportForm({
         />
         <div className="mt-1 flex justify-between text-xs">
           {getFieldError("assessment") ? (
-            <span className="text-red-400">
-              {getFieldError("assessment")}
-            </span>
+            <span className="text-red-600">{getFieldError("assessment")}</span>
           ) : (
-            <span></span>
+            <span />
           )}
           <span
-            className={`${
+            className={
               assessment.length > ASSESSMENT_MAX_CHARS * 0.9
-                ? "text-amber-400"
+                ? "text-amber-600"
                 : "text-slate-400"
-            }`}
+            }
           >
             {assessment.length}/{ASSESSMENT_MAX_CHARS}
           </span>
@@ -268,9 +268,12 @@ export function ReportForm({
       <div>
         <label
           htmlFor="plan"
-          className="mb-2 block text-sm font-medium text-slate-300"
+          className="mb-1.5 block text-sm font-medium text-slate-700"
         >
-          Plan *
+          Plan{" "}
+          <span className="text-red-500" aria-hidden="true">
+            *
+          </span>
         </label>
         <textarea
           id="plan"
@@ -279,12 +282,8 @@ export function ReportForm({
             setPlan(e.target.value);
             validateField("plan", e.target.value);
           }}
-          placeholder="Treatment plan and next steps..."
-          className={`w-full rounded-lg border px-3 py-2 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 ${
-            getFieldError("plan")
-              ? "border-red-500 bg-red-500/10 focus:border-red-500 focus:ring-red-500"
-              : "border-slate-600 bg-slate-700 focus:border-blue-500 focus:ring-blue-500"
-          }`}
+          placeholder="Treatment plan and next steps…"
+          className={textareaClass(!!getFieldError("plan"))}
           rows={4}
           maxLength={PLAN_MAX_CHARS}
           disabled={isSubmitting}
@@ -292,18 +291,16 @@ export function ReportForm({
         />
         <div className="mt-1 flex justify-between text-xs">
           {getFieldError("plan") ? (
-            <span className="text-red-400">
-              {getFieldError("plan")}
-            </span>
+            <span className="text-red-600">{getFieldError("plan")}</span>
           ) : (
-            <span></span>
+            <span />
           )}
           <span
-            className={`${
+            className={
               plan.length > PLAN_MAX_CHARS * 0.9
-                ? "text-amber-400"
+                ? "text-amber-600"
                 : "text-slate-400"
-            }`}
+            }
           >
             {plan.length}/{PLAN_MAX_CHARS}
           </span>
@@ -313,14 +310,14 @@ export function ReportForm({
       {/* Disposition */}
       <div>
         <fieldset>
-          <legend className="mb-3 text-sm font-medium text-slate-300">
+          <legend className="mb-2 text-sm font-medium text-slate-700">
             Disposition *
           </legend>
           <div className="space-y-2">
             {dispositionOptions.map((option) => (
               <label
                 key={option.value}
-                className="flex items-center gap-3 cursor-pointer"
+                className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 px-3 py-2.5 transition-colors hover:bg-slate-50 has-[:checked]:border-blue-300 has-[:checked]:bg-blue-50/50"
               >
                 <input
                   type="radio"
@@ -332,14 +329,14 @@ export function ReportForm({
                     validateField("disposition", e.target.value);
                   }}
                   disabled={isSubmitting}
-                  className="h-4 w-4 border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
+                  className="h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="text-sm text-slate-200">{option.label}</span>
+                <span className="text-sm text-slate-700">{option.label}</span>
               </label>
             ))}
           </div>
           {getFieldError("disposition") && (
-            <p className="mt-2 text-xs text-red-400">
+            <p className="mt-1.5 text-xs text-red-600">
               {getFieldError("disposition")}
             </p>
           )}
@@ -347,15 +344,15 @@ export function ReportForm({
       </div>
 
       {/* Submit Button */}
-      <div className="flex justify-end pt-4">
+      <div className="flex justify-end border-t border-slate-100 pt-4">
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600"
+          className="rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           {isSubmitting ? (
             <span className="flex items-center gap-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
               Submitting Report...
             </span>
           ) : (

@@ -11,7 +11,7 @@ import type { PatientRecord, PatientStatus } from "@/types";
 
 /**
  * Dashboard page — main landing page for the Doctor Interface.
- * 
+ *
  * Requirements:
  * - Req 1.2: Fetch and display list of PatientRecord objects from GET /api/v1/patients
  * - Req 1.4: Sort patients by status priority (HELP_TRIGGERED → IN_SESSION → ESCALATED → IDLE)
@@ -37,7 +37,8 @@ export default function DashboardPage() {
       setPatients(patientList);
       setError(null);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to fetch patients";
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch patients";
       setError(message);
       console.error("Error fetching patients:", err);
     } finally {
@@ -47,10 +48,10 @@ export default function DashboardPage() {
 
   /**
    * Handle "Join Session" button click.
-   * 
+   *
    * Task 2.6: Optimistically patch patientStore with status: IN_SESSION,
    * call POST /api/v1/patients/:id/join, then navigate to session page.
-   * 
+   *
    * Req 1.5: POST /api/v1/patients/{patient_id}/join with clinician_id
    * Req 1.6: Display inline error on failure
    */
@@ -122,7 +123,7 @@ export default function DashboardPage() {
 
   /**
    * Sort patients by status priority.
-   * 
+   *
    * Req 1.4: HELP_TRIGGERED → IN_SESSION → ESCALATED → IDLE,
    * ordered by last_updated ascending within each group.
    */
@@ -136,12 +137,14 @@ export default function DashboardPage() {
 
     return Object.values(patients).sort((a, b) => {
       // First, sort by status priority
-      const priorityDiff = statusPriority[a.status] - statusPriority[b.status];
+      const priorityDiff =
+        statusPriority[a.status] - statusPriority[b.status];
       if (priorityDiff !== 0) return priorityDiff;
 
       // Within same status, sort by last_updated ascending (oldest first)
       return (
-        new Date(a.last_updated).getTime() - new Date(b.last_updated).getTime()
+        new Date(a.last_updated).getTime() -
+        new Date(b.last_updated).getTime()
       );
     });
   };
@@ -165,47 +168,61 @@ export default function DashboardPage() {
   const isEmpty = sortedPatients.length === 0;
 
   return (
-    <div className="min-h-screen bg-slate-900 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-100 mb-2">
-            Patient Dashboard
-          </h1>
-          <p className="text-slate-400">
-            Monitor patient status and join active sessions
-          </p>
+    <div className="min-h-screen bg-slate-50">
+      {/* Top navigation bar */}
+      <header className="border-b border-slate-200 bg-white shadow-sm">
+        <div className="mx-auto max-w-7xl px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-slate-900">
+                Patient Dashboard
+              </h1>
+              <p className="mt-0.5 text-sm text-slate-500">
+                Monitor patient status and join active sessions
+              </p>
+            </div>
+            {/* Live indicator */}
+            <div className="flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 ring-1 ring-green-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+              Live
+            </div>
+          </div>
         </div>
+      </header>
 
+      <main className="mx-auto max-w-7xl px-6 py-8">
         {/* Loading State */}
         {isLoading && (
-          <div className="flex items-center justify-center py-16">
-            <div className="text-slate-400">Loading patients...</div>
+          <div className="flex items-center justify-center py-20">
+            <div className="flex items-center gap-3 text-slate-500">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
+              <span className="text-sm">Loading patients…</span>
+            </div>
           </div>
         )}
 
         {/* Error State */}
         {error && !isLoading && (
-          <div className="bg-red-900/20 border border-red-500 rounded-lg p-4 mb-6">
-            <div className="text-red-400 font-medium mb-2">
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+            <p className="text-sm font-medium text-red-700">
               Failed to load patients
-            </div>
-            <div className="text-red-300 text-sm mb-3">{error}</div>
+            </p>
+            <p className="mt-1 text-sm text-red-600">{error}</p>
             <button
               onClick={fetchPatients}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors"
+              className="mt-3 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
             >
               Retry
             </button>
           </div>
         )}
 
-        {/* Empty State - Req 1.8 */}
+        {/* Empty State — Req 1.8 */}
         {!isLoading && !error && isEmpty && <EmptyState />}
 
-        {/* Patient List */}
+        {/* Patient Grid */}
         {!isLoading && !error && !isEmpty && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {sortedPatients.map((patient) => (
               <div key={patient.patient_id}>
                 <PatientCard
@@ -213,19 +230,19 @@ export default function DashboardPage() {
                   onJoinSession={handleJoinSession}
                   isJoining={joiningPatientId === patient.patient_id}
                 />
-                {/* Inline error display - Req 1.6 */}
+                {/* Inline error display — Req 1.6 */}
                 {joinError[patient.patient_id] && (
-                  <div className="mt-2 p-3 bg-red-900/20 border border-red-500 rounded-md">
-                    <div className="text-red-400 text-sm">
+                  <div className="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2">
+                    <p className="text-sm text-red-600">
                       {joinError[patient.patient_id]}
-                    </div>
+                    </p>
                   </div>
                 )}
               </div>
             ))}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

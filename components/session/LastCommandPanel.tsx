@@ -25,10 +25,10 @@ export function LastCommandPanel() {
   const commandStatus = useCommandStore((s) => s.commandStatus);
 
   return (
-    <div className="bg-slate-800 rounded-lg border border-slate-700 p-4 space-y-3">
+    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm space-y-3">
       {/* Panel header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wide">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Last Command Sent
         </h3>
 
@@ -37,7 +37,7 @@ export function LastCommandPanel() {
           <span
             role="status"
             aria-live="polite"
-            className="text-xs font-medium px-2 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20"
+            className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-200"
           >
             Command sent
           </span>
@@ -46,7 +46,7 @@ export function LastCommandPanel() {
           <span
             role="status"
             aria-live="polite"
-            className="text-xs font-medium px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20"
+            className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-red-200"
           >
             Command failed
           </span>
@@ -55,11 +55,11 @@ export function LastCommandPanel() {
 
       {/* Command JSON or placeholder */}
       {lastCommand === null ? (
-        <p className="text-sm text-slate-500 italic">No commands sent yet</p>
+        <p className="text-sm italic text-slate-400">No commands sent yet</p>
       ) : (
         <pre
           aria-label="Last command JSON"
-          className="text-xs text-slate-300 bg-slate-900 rounded-md p-3 overflow-x-auto whitespace-pre font-mono leading-relaxed border border-slate-700"
+          className="overflow-x-auto whitespace-pre rounded-md border border-slate-100 bg-slate-50 p-3 font-mono text-xs leading-relaxed text-slate-700"
         >
           {JSON.stringify(lastCommand, null, 2)}
         </pre>

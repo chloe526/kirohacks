@@ -65,7 +65,6 @@ export function ReportModal({
     setServerErrors({});
 
     try {
-      // Construct ReportPayload
       const reportPayload: ReportPayload = {
         session_id: sessionId,
         clinician_id: clinicianId,
@@ -77,11 +76,8 @@ export function ReportModal({
         submitted_at: new Date().toISOString(),
       };
 
-      // POST to /api/v1/reports
       await post<{ report_id: string }>("/reports", reportPayload);
 
-      // On HTTP 201 success:
-      // 1. Optimistically update patient status
       if (activePatient) {
         patchActivePatient({
           status: "IDLE",
@@ -93,31 +89,24 @@ export function ReportModal({
         });
       }
 
-      // 2. Show success toast
       addToast("Report submitted successfully", "success");
-
-      // 3. Close modal and call success callback
       onSuccess();
     } catch (error) {
       if (error instanceof Error) {
-        // Check if it's a 422 validation error
         if (error.message.includes("422")) {
           try {
-            // Try to parse server validation errors from error message
-            // This is a simplified approach - in a real app you'd have better error parsing
             const errorBody = error.message.split(": ")[1];
             if (errorBody) {
               const parsedErrors = JSON.parse(errorBody);
               setServerErrors(parsedErrors);
             }
           } catch {
-            // If parsing fails, show generic error
             setServerErrors({
-              chief_complaint: "Validation error occurred. Please check all fields.",
+              chief_complaint:
+                "Validation error occurred. Please check all fields.",
             });
           }
         } else {
-          // Other errors - show generic message
           addToast("Failed to submit report. Please try again.", "error");
         }
       }
@@ -133,17 +122,14 @@ export function ReportModal({
   };
 
   const handleDismiss = () => {
-    // Show confirmation dialog when trying to dismiss without submitting
     setShowConfirmDialog(true);
   };
 
   const handleConfirmGoBack = () => {
-    // Return to report form
     setShowConfirmDialog(false);
   };
 
   const handleConfirmLeaveAnyway = () => {
-    // Close both dialogs
     setShowConfirmDialog(false);
     onDismiss();
   };
@@ -151,18 +137,18 @@ export function ReportModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm"
         onClick={handleBackdropClick}
       >
-        <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-slate-800 p-6 shadow-xl">
+        <div className="my-8 w-full max-w-2xl rounded-xl bg-white shadow-xl">
           {/* Modal Header */}
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-slate-100">
+          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+            <h2 className="text-lg font-semibold text-slate-900">
               End Session Report
             </h2>
             <button
               onClick={handleDismiss}
-              className="rounded-lg p-2 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+              className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
               aria-label="Close modal"
             >
               <svg
@@ -170,6 +156,7 @@ export function ReportModal({
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -182,14 +169,18 @@ export function ReportModal({
           </div>
 
           {/* Report Form */}
-          <ReportForm
-            sessionId={sessionId}
-            patientName={patientName}
-            sessionStartedAt={new Date(Date.now() - durationSeconds * 1000).toISOString()}
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-            validationErrors={serverErrors}
-          />
+          <div className="px-6 py-5">
+            <ReportForm
+              sessionId={sessionId}
+              patientName={patientName}
+              sessionStartedAt={new Date(
+                Date.now() - durationSeconds * 1000
+              ).toISOString()}
+              onSubmit={handleSubmit}
+              isSubmitting={isSubmitting}
+              validationErrors={serverErrors}
+            />
+          </div>
         </div>
       </div>
 

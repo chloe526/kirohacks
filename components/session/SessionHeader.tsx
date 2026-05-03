@@ -38,17 +38,17 @@ export function SessionHeader({
   const isInSession = patient.status === "IN_SESSION";
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-700 bg-slate-900 px-6 py-4 shadow-lg">
-      <div className="flex items-center justify-between">
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white px-6 py-3 shadow-sm">
+      <div className="mx-auto flex max-w-screen-xl items-center justify-between">
         {/* Left section: Patient info, session ID, timer, status badge */}
-        <div className="flex items-center gap-6">
-          {/* Patient name with online indicator */}
-          <div className="flex items-center gap-2">
-            <div
-              className={`h-3 w-3 rounded-full ${
+        <div className="flex items-center gap-5 min-w-0">
+          {/* Robot connection dot + patient name */}
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${
                 patient.robot.connection === "online"
                   ? "bg-green-500"
-                  : "bg-red-500"
+                  : "bg-red-400"
               }`}
               aria-label={
                 patient.robot.connection === "online"
@@ -56,16 +56,16 @@ export function SessionHeader({
                   : "Robot offline"
               }
             />
-            <h1 className="text-xl font-semibold text-slate-100">
+            <h1 className="truncate text-lg font-semibold text-slate-900">
               {patient.name}
             </h1>
           </div>
 
           {/* Session ID */}
           {patient.session.session_id && (
-            <div className="text-sm text-slate-400">
-              <span className="font-mono">{patient.session.session_id}</span>
-            </div>
+            <span className="hidden font-mono text-xs text-slate-400 sm:block">
+              {patient.session.session_id}
+            </span>
           )}
 
           {/* Session Timer */}
@@ -76,24 +76,24 @@ export function SessionHeader({
         </div>
 
         {/* Right section: Action buttons */}
-        <div className="flex items-center gap-3">
-          {/* End Session button */}
+        <div className="flex flex-shrink-0 items-center gap-3 pl-4">
+          {/* End Session button — secondary style */}
           <button
             onClick={onEndSession}
             disabled={!isInSession}
-            className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-slate-100 transition-colors hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-slate-700"
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             aria-label="End session and submit report"
           >
             End Session
           </button>
 
-          {/* Dispatch Emergency Services button */}
+          {/* Dispatch Emergency Services button — danger style */}
           <button
             onClick={onDispatch}
             disabled={isEscalated}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
               isEscalated
-                ? "cursor-not-allowed bg-slate-700 text-slate-400 opacity-50"
+                ? "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
                 : "bg-red-600 text-white hover:bg-red-700"
             }`}
             aria-label={
@@ -103,19 +103,25 @@ export function SessionHeader({
             }
           >
             {isEscalated ? (
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-1.5">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
                 Dispatched
-                <span className="text-lg" aria-hidden="true">
-                  ✓
-                </span>
               </span>
             ) : (
-              <span className="flex items-center gap-2">
-                <span className="text-lg" aria-hidden="true">
-                  🚨
-                </span>
-                Dispatch Emergency Services
-              </span>
+              "Dispatch Emergency"
             )}
           </button>
         </div>

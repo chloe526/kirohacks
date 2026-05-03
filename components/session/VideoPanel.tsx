@@ -18,30 +18,7 @@ interface VideoPanelProps {
  * Shows patient name overlay, robot connection status, and audio status.
  * Integrates with useAudioSocket hook for live audio streaming.
  *
- * Layout:
- * ┌─────────────────────────────────────────────────────┐
- * │                                          [🟢 Live]  │
- * │                    📷                    [🎤 Audio] │
- * │         Live video feed — not yet connected         │
- * │                                                     │
- * │  John Doe                        [🔇 Mute]          │
- * └─────────────────────────────────────────────────────┘
- *
- * Features (Milestone 5):
- * - 16:9 aspect ratio with minimum height of 360px
- * - Dark background (slate-900)
- * - Centered camera icon and placeholder text
- * - Patient name overlay at bottom-left
- * - Connection status badge at top-right (online = green, offline = red)
- * - Audio status indicator with connection state
- * - Mute/unmute toggle button
- * - Reconnection status display
- *
- * Audio Integration:
- * - Uses useAudioSocket hook for WebSocket audio connection
- * - Shows audio status: connected (green mic), disconnected (red mic), connecting (amber spinner)
- * - Displays reconnection attempts during retry
- * - Mock mode support with static "Audio (mocked)" badge
+ * Note: test suite asserts specific Tailwind classes — keep them stable.
  *
  * Related requirements:
  * - Requirement 5: Video and Audio Panel
@@ -54,17 +31,12 @@ export function VideoPanel({
   sessionActive,
 }: VideoPanelProps) {
   const isOnline = robotConnection === "online";
-  
-  // Integrate useAudioSocket hook
-  const { connectionState, isMuted, toggleMute, reconnectCount } = useAudioSocket(
-    sessionId,
-    sessionActive
-  );
 
-  // Check if we're in mock mode
+  const { connectionState, isMuted, toggleMute, reconnectCount } =
+    useAudioSocket(sessionId, sessionActive);
+
   const isMockMode = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
 
-  // Render audio status indicator based on connection state
   const renderAudioStatus = () => {
     if (isMockMode) {
       return (
@@ -83,19 +55,19 @@ export function VideoPanel({
             <span>Audio connected</span>
           </div>
         );
-      case "connecting":
+      case "connecting": {
         const isReconnecting = reconnectCount > 0;
         return (
           <div className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500">
             <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
             <span>
-              {isReconnecting 
+              {isReconnecting
                 ? `Reconnecting audio… (attempt ${reconnectCount}/3)`
-                : "Connecting audio…"
-              }
+                : "Connecting audio…"}
             </span>
           </div>
         );
+      }
       case "disconnected":
       default:
         return (
@@ -107,15 +79,14 @@ export function VideoPanel({
     }
   };
 
-  // Render mute/unmute toggle button
   const renderMuteToggle = () => {
     const isDisabled = connectionState !== "connected";
-    
+
     return (
       <button
         onClick={toggleMute}
         disabled={isDisabled}
-        className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+        className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:ring-offset-slate-900 ${
           isDisabled
             ? "bg-slate-700 text-slate-500 cursor-not-allowed"
             : isMuted
@@ -139,12 +110,10 @@ export function VideoPanel({
       {/* 16:9 aspect ratio container with minimum height */}
       <div
         className="relative w-full"
-        style={{
-          aspectRatio: "16 / 9",
-          minHeight: "360px",
-        }}
+        style={{ aspectRatio: "16 / 9", minHeight: "360px" }}
       >
-        {/* Connection status badge — top-right */}
+        {/* Connection status badge — top-right
+            Note: test suite asserts bg-green-500/20 text-green-400 and bg-red-500/20 text-red-400 */}
         <div className="absolute top-4 right-4 z-10">
           <div
             className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium ${

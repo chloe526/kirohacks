@@ -52,7 +52,6 @@ export function DispatchConfirmDialog({
     setError(null);
 
     try {
-      // Construct DispatchRequest object
       const dispatchRequest: DispatchRequest = {
         session_id: sessionId,
         patient_id: patientId,
@@ -61,19 +60,15 @@ export function DispatchConfirmDialog({
         requested_at: new Date().toISOString(),
       };
 
-      // POST to /api/v1/dispatch
       await post("/dispatch", dispatchRequest);
 
-      // Reset form state after successful dispatch
       setReason("");
       onSuccess();
     } catch (err) {
       console.error("Dispatch failed:", err);
-      
-      // Handle specific error cases
+
       if (err instanceof Error && err.message.includes("status 409")) {
         setError("Emergency services were already dispatched for this session");
-        // Auto-close after 2 seconds for duplicate dispatch
         setTimeout(() => {
           setReason("");
           setError(null);
@@ -103,7 +98,7 @@ export function DispatchConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
       onClick={handleCancel}
       onKeyDown={handleKeyDown}
       role="dialog"
@@ -111,74 +106,82 @@ export function DispatchConfirmDialog({
       aria-labelledby="dispatch-dialog-title"
     >
       <div
-        className="w-full max-w-md rounded-lg bg-slate-800 p-6 shadow-xl"
+        className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-5">
           <h2
             id="dispatch-dialog-title"
-            className="text-xl font-semibold text-slate-100"
+            className="text-lg font-semibold text-slate-900"
           >
             Dispatch Emergency Services
           </h2>
-          <p className="mt-2 text-sm text-slate-400">
-            This action will immediately contact emergency services for the patient.
+          <p className="mt-1 text-sm text-slate-500">
+            This action will immediately contact emergency services for the
+            patient.
           </p>
         </div>
 
         {/* Patient Information */}
-        <div className="mb-6 rounded-lg bg-slate-700/50 p-4">
-          <h3 className="mb-2 text-sm font-medium text-slate-300">
-            Patient Information
-          </h3>
-          <div className="space-y-1">
-            <p className="text-slate-100 font-medium">{patientName}</p>
-            <p className="text-sm text-slate-300">{fullAddress}</p>
-          </div>
+        <div className="mb-5 rounded-lg bg-slate-50 p-4 ring-1 ring-slate-200">
+          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+            Patient
+          </p>
+          <p className="font-medium text-slate-900">{patientName}</p>
+          <p className="mt-0.5 text-sm text-slate-600">{fullAddress}</p>
         </div>
 
         {/* Reason for Dispatch */}
-        <div className="mb-6">
+        <div className="mb-5">
           <label
             htmlFor="dispatch-reason"
-            className="mb-2 block text-sm font-medium text-slate-300"
+            className="mb-1.5 block text-sm font-medium text-slate-700"
           >
-            Reason for dispatch *
+            Reason for dispatch{" "}
+            <span className="text-red-500" aria-hidden="true">
+              *
+            </span>
           </label>
           <textarea
             id="dispatch-reason"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Describe the emergency situation requiring immediate medical attention..."
-            className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-slate-100 placeholder-slate-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+            placeholder="Describe the emergency situation requiring immediate medical attention…"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50 disabled:text-slate-400"
             rows={4}
             required
             disabled={isSubmitting}
           />
-          <div className="mt-1 flex justify-between text-xs">
+          <div className="mt-1.5 flex justify-between text-xs">
             <span
-              className={`${
+              className={
                 reason.trim().length < DISPATCH_REASON_MIN_CHARS
-                  ? "text-red-400"
-                  : "text-green-400"
-              }`}
+                  ? "text-slate-400"
+                  : "text-green-600 font-medium"
+              }
             >
               {reason.trim().length < DISPATCH_REASON_MIN_CHARS
                 ? `Minimum ${DISPATCH_REASON_MIN_CHARS} characters required`
                 : "✓ Reason provided"}
             </span>
-            <span className="text-slate-400">
-              {reason.length} characters
-            </span>
+            <span className="text-slate-400">{reason.length} characters</span>
           </div>
-          
+
           {/* Error message */}
           {error && (
-            <div className="mt-2 rounded-lg bg-red-500/10 border border-red-500/20 p-3">
-              <p className="text-sm text-red-300">{error}</p>
+            <div className="mt-2 rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
+        </div>
+
+        {/* Warning Notice */}
+        <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <p className="text-xs text-amber-700">
+            This action cannot be undone. Emergency services will be contacted
+            immediately with the patient&apos;s location and your provided reason.
+          </p>
         </div>
 
         {/* Action Buttons */}
@@ -186,32 +189,24 @@ export function DispatchConfirmDialog({
           <button
             onClick={handleCancel}
             disabled={isSubmitting}
-            className="flex-1 rounded-lg border border-slate-600 bg-slate-700 px-4 py-2 text-sm font-medium text-slate-100 transition-colors hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-1 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={!isReasonValid || isSubmitting}
-            className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-red-600"
+            className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
           >
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                 Dispatching...
               </span>
             ) : (
               "Confirm Dispatch"
             )}
           </button>
-        </div>
-
-        {/* Warning Notice */}
-        <div className="mt-4 rounded-lg bg-red-500/10 border border-red-500/20 p-3">
-          <p className="text-xs text-red-300">
-            ⚠️ This action cannot be undone. Emergency services will be contacted
-            immediately with the patient's location and your provided reason.
-          </p>
         </div>
       </div>
     </div>

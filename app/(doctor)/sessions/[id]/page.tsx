@@ -10,6 +10,10 @@ import { SessionHeader } from "@/components/session/SessionHeader";
 import { PatientInfoCard } from "@/components/session/PatientInfoCard";
 import { VideoPanel } from "@/components/session/VideoPanel";
 import { AlertStatusCard } from "@/components/session/AlertStatusCard";
+import { RobotStatusCard } from "@/components/session/RobotStatusCard";
+import { MovementPad } from "@/components/session/MovementPad";
+import { LastCommandPanel } from "@/components/session/LastCommandPanel";
+import { CommandLogConnected } from "@/components/session/CommandLog";
 import { DispatchConfirmDialog } from "@/components/modals/DispatchConfirmDialog";
 import { ReportModal } from "@/components/modals/ReportModal";
 import { Banner } from "@/components/ui/Banner";
@@ -65,21 +69,17 @@ export default function SessionPage() {
       setActivePatient(patient);
     } catch (error) {
       console.error("Failed to fetch patient:", error);
-      // Error handling will be improved in future milestones
     }
   };
 
   // Set up polling
   useEffect(() => {
-    // Initial fetch
     fetchPatient();
 
-    // Set up polling interval
     pollIntervalRef.current = setInterval(() => {
       fetchPatient();
     }, POLL_INTERVAL_MS);
 
-    // Cleanup on unmount
     return () => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
@@ -104,7 +104,6 @@ export default function SessionPage() {
 
   // Handle successful dispatch
   const handleDispatchSuccess = () => {
-    // Optimistically update patient status to ESCALATED
     patchActivePatient({ status: "ESCALATED" });
     closeDispatchDialog();
   };
@@ -112,8 +111,11 @@ export default function SessionPage() {
   // Loading state
   if (isLoadingActive || !activePatient) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-slate-400 text-lg">Loading session...</div>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="flex items-center gap-3 text-slate-500">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
+          <span className="text-sm">Loading session…</span>
+        </div>
       </div>
     );
   }
@@ -121,9 +123,12 @@ export default function SessionPage() {
   // Error state
   if (activeError) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-red-400 text-lg">
-          Error loading session: {activeError}
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+          <p className="text-sm font-medium text-red-700">
+            Error loading session
+          </p>
+          <p className="mt-1 text-sm text-red-600">{activeError}</p>
         </div>
       </div>
     );
@@ -136,7 +141,7 @@ export default function SessionPage() {
     activePatient.status === "ESCALATED";
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-slate-50">
       {/* Fixed header */}
       <SessionHeader
         patient={activePatient}
@@ -154,19 +159,20 @@ export default function SessionPage() {
       )}
 
       {/* Three-panel layout */}
-      <div className="container mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left panel: Patient Profile (3 columns on large screens) */}
-          <div className="lg:col-span-3">
+      <div className="mx-auto max-w-screen-xl px-6 py-6">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+          {/* Left panel: Patient Profile (3 columns) */}
+          <div className="lg:col-span-3 space-y-5">
             <PatientInfoCard
               name={activePatient.name}
               addressLine1={activePatient.address.line1}
               addressLine2={activePatient.address.line2}
             />
+            <RobotStatusCard robot={activePatient.robot} />
           </div>
 
-          {/* Centre panel: Video or Summary (6 columns on large screens) */}
-          <div className="lg:col-span-6">
+          {/* Centre panel: Video or Summary (6 columns) */}
+          <div className="lg:col-span-6 space-y-5">
             {showSummaryView ? (
               <SummaryPanel patient={activePatient} />
             ) : (
@@ -177,33 +183,31 @@ export default function SessionPage() {
                 sessionActive={activePatient.session.active}
               />
             )}
+
+            {/* Movement controls below video */}
+            <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="mb-4 text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                Robot Controls
+              </h3>
+              <div className="flex justify-center">
+                <MovementPad
+                  sessionId={activePatient.session.session_id ?? ""}
+                  robotOnline={activePatient.robot.connection === "online"}
+                  onCommandSent={() => {}}
+                />
+              </div>
+            </div>
+
+            <LastCommandPanel />
           </div>
 
-          {/* Right panel: Alert Status + future action panels (3 columns on large screens) */}
-          <div className="lg:col-span-3 space-y-6">
+          {/* Right panel: Alert Status + Command Log (3 columns) */}
+          <div className="lg:col-span-3 space-y-5">
             <AlertStatusCard
               status={activePatient.status}
               helpTriggeredAt={activePatient.help_event.triggered_at}
             />
-
-            {/* Placeholder for future action panels (Milestone 4+) */}
-            <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
-              <h3 className="text-sm font-medium text-slate-400 mb-2">
-                Robot Controls
-              </h3>
-              <p className="text-xs text-slate-500">
-                Coming in Milestone 4
-              </p>
-            </div>
-
-            <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
-              <h3 className="text-sm font-medium text-slate-400 mb-2">
-                Command Log
-              </h3>
-              <p className="text-xs text-slate-500">
-                Coming in Milestone 4
-              </p>
-            </div>
+            <CommandLogConnected />
           </div>
         </div>
       </div>
@@ -219,7 +223,7 @@ export default function SessionPage() {
         onSuccess={handleDispatchSuccess}
         onCancel={closeDispatchDialog}
       />
-      
+
       {/* Report Modal */}
       {activePatient.session.started_at && (
         <ReportModal
@@ -227,7 +231,9 @@ export default function SessionPage() {
           sessionId={activePatient.session.session_id || ""}
           patientName={activePatient.name}
           durationSeconds={Math.floor(
-            (Date.now() - new Date(activePatient.session.started_at).getTime()) / 1000
+            (Date.now() -
+              new Date(activePatient.session.started_at).getTime()) /
+              1000
           )}
           clinicianId="doc-456" // TODO: Get from auth context
           onSuccess={closeReportModal}
@@ -243,8 +249,6 @@ export default function SessionPage() {
  *
  * Displayed in place of the VideoPanel when the session has ended (IDLE with
  * ended_at) or has been escalated (ESCALATED).
- *
- * Shows a confirmation message appropriate to the status.
  */
 function SummaryPanel({ patient }: { patient: PatientRecord }) {
   const isEscalated = patient.status === "ESCALATED";
@@ -252,36 +256,66 @@ function SummaryPanel({ patient }: { patient: PatientRecord }) {
     patient.status === "IDLE" && patient.session.ended_at !== null;
 
   return (
-    <div className="bg-slate-800 rounded-lg border border-slate-700 p-8 min-h-[360px] flex items-center justify-center">
-      <div className="text-center space-y-4">
+    <div className="flex min-h-[360px] items-center justify-center rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="text-center space-y-3">
         {isEscalated && (
           <>
-            <div className="text-6xl mb-4" aria-hidden="true">
-              🚨
+            <div
+              className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-red-50"
+              aria-hidden="true"
+            >
+              <svg
+                className="h-8 w-8 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                />
+              </svg>
             </div>
-            <h2 className="text-2xl font-semibold text-red-400">
+            <h2 className="text-xl font-semibold text-red-700">
               Emergency Services Dispatched
             </h2>
-            <p className="text-slate-300 max-w-md">
-              Emergency services have been contacted for {patient.name}.
-              The session is now in escalated status.
+            <p className="text-sm text-slate-500 max-w-sm">
+              Emergency services have been contacted for {patient.name}. The
+              session is now in escalated status.
             </p>
           </>
         )}
 
         {isEnded && (
           <>
-            <div className="text-6xl mb-4" aria-hidden="true">
-              ✓
+            <div
+              className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-green-50"
+              aria-hidden="true"
+            >
+              <svg
+                className="h-8 w-8 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
             </div>
-            <h2 className="text-2xl font-semibold text-green-400">
+            <h2 className="text-xl font-semibold text-green-700">
               Session Ended
             </h2>
-            <p className="text-slate-300 max-w-md">
+            <p className="text-sm text-slate-500 max-w-sm">
               The session with {patient.name} has been completed.
               {patient.session.session_id && (
-                <span className="block mt-2 text-sm text-slate-400">
-                  Session ID: {patient.session.session_id}
+                <span className="mt-1 block font-mono text-xs text-slate-400">
+                  {patient.session.session_id}
                 </span>
               )}
             </p>
