@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Camera, Mic, MicOff, Loader2 } from "lucide-react";
+import { Mic, MicOff, Loader2 } from "lucide-react";
 import { useAudioSocket } from "@/hooks/useAudioSocket";
 
 interface VideoPanelProps {
@@ -36,6 +36,8 @@ export function VideoPanel({
     useAudioSocket(sessionId, sessionActive);
 
   const isMockMode = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
+
+  const ROBOT_STREAM_URL = "http://10.40.98.25:8080/";
 
   const renderAudioStatus = () => {
     if (isMockMode) {
@@ -137,27 +139,14 @@ export function VideoPanel({
           {renderAudioStatus()}
         </div>
 
-        {/* Center content: live iframe if configured, otherwise placeholder */}
-        {process.env.NEXT_PUBLIC_ROBOT_STREAM_URL ? (
-          <iframe
-            src={process.env.NEXT_PUBLIC_ROBOT_STREAM_URL}
-            title={`Live robot video feed for ${patientName}`}
-            className="absolute inset-0 h-full w-full border-0 bg-slate-950"
-            allow="camera; microphone; autoplay; fullscreen"
-            allowFullScreen
-          />
-        ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-            <Camera
-              className="w-16 h-16 text-slate-600"
-              aria-hidden="true"
-              strokeWidth={1.5}
-            />
-            <p className="text-slate-400 text-sm font-medium">
-              Live video feed — not yet connected
-            </p>
-          </div>
-        )}
+        {/* Center content: live iframe, always shown */}
+        <iframe
+          src={ROBOT_STREAM_URL}
+          title={`Live robot video feed for ${patientName}`}
+          className="absolute inset-0 h-full w-full border-0 bg-slate-950"
+          allow="camera; microphone; autoplay; fullscreen"
+          allowFullScreen
+        />
 
         {/* Patient name overlay — bottom-left */}
         <div className="absolute bottom-4 left-4 z-10">
