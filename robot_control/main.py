@@ -21,6 +21,7 @@ def main():
 
     while True:
         server.state["status"] = "IDLE"
+        server.state["robot"]["connection"] = "online"
         server.state["last_update"] = datetime.datetime.now().isoformat()
 
         return_code = os.system("python3 detect_voice.py")
