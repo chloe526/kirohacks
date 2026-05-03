@@ -21,7 +21,7 @@ def main():
         return_code = os.system("python3 detect_voice.py")
 
         if return_code == 0:
-            time.sleep(5)
+            # time.sleep(5)
             now = datetime.datetime.now().isoformat()
 
             server.state["status"] = "HELP_TRIGGERED"

@@ -21,6 +21,7 @@ import os
 import socket
 import struct
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import cv2
@@ -422,12 +423,17 @@ def main() -> None:
         return
     pipeline, width, height, fps = result
 
-    # Find ReSpeaker
-    respeaker_index = get_respeaker_device_id()
-    if respeaker_index < 0:
-        print("[audio] ReSpeaker not found — audio will be unavailable.")
+    # Find ReSpeaker — retry up to 10 times with a 1s delay between attempts
+    respeaker_index = -1
+    for attempt in range(1, 11):
+        respeaker_index = get_respeaker_device_id()
+        if respeaker_index >= 0:
+            print(f"[audio] ReSpeaker found at device index {respeaker_index}")
+            break
+        print(f"[audio] ReSpeaker not found (attempt {attempt}/10), retrying in 1s...")
+        time.sleep(1)
     else:
-        print(f"[audio] ReSpeaker found at device index {respeaker_index}")
+        print("[audio] ReSpeaker not found after 10 attempts — audio will be unavailable.")
 
     # Start camera capture thread
     stop_event = threading.Event()
