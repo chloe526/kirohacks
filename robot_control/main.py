@@ -34,6 +34,8 @@ def main():
             print(f"Triggered help event at: {now}")
 
             stream_server.main()            
+
+            time.sleep(5)
         else:
             print("error in voice detection")
             exit(1)
