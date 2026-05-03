@@ -1,21 +1,21 @@
 [
   {
-    "patient_id": "pat-001",
-    "name": "Margaret Ellis",
+    "patient_id": "pat-0001",
+    "name": "John Doe",
     "address": {
-      "line1": "42 Willow Creek Drive",
-      "line2": "Springfield, IL 62701"
+      "line1": "1234 Imaginary Ave",
+      "line2": "City State 12345"
     },
-    "status": "IDLE",
-    "last_updated": "2024-01-15T09:00:00Z",
+    "status": "CALL_READY",
+    "last_updated": "2026-05-02T19:17:16.456180",
     "help_event": {
       "triggered_at": null
     },
     "robot": {
-      "connection": "online",
-      "battery": 91,
-      "last_command": "stop",
-      "last_command_at": "2024-01-15T08:55:00Z"
+      "connection": "offline",
+      "battery": 0.0,
+      "last_command": "",
+      "last_command_at": ""
     },
     "session": {
       "session_id": null,

@@ -27,7 +27,7 @@ def main():
 
         if return_code == 0:
             now = datetime.datetime.now().isoformat()
-            server.state["help_event"]["triggered"] = now
+            server.state["help_event"]["triggered_at"] = now
             server.state["last_update"] = now
 
             server.state["status"] = "HELP_TRIGGERED"

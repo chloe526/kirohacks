@@ -21,6 +21,7 @@ export function Badge({ status }: BadgeProps) {
     IDLE: "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
     HELP_TRIGGERED:
       "bg-amber-50 text-amber-700 ring-1 ring-amber-300 animate-subtle-pulse",
+    CALL_READY: "bg-blue-50 text-blue-700 ring-1 ring-blue-300",
     IN_SESSION: "bg-green-50 text-green-700 ring-1 ring-green-300",
     ESCALATED: "bg-red-50 text-red-700 ring-1 ring-red-300",
   };
@@ -28,6 +29,7 @@ export function Badge({ status }: BadgeProps) {
   const dotClasses: Record<PatientStatus, string> = {
     IDLE: "bg-slate-400",
     HELP_TRIGGERED: "bg-amber-500",
+    CALL_READY: "bg-blue-500",
     IN_SESSION: "bg-green-500",
     ESCALATED: "bg-red-500",
   };
@@ -35,6 +37,7 @@ export function Badge({ status }: BadgeProps) {
   const statusLabels: Record<PatientStatus, string> = {
     IDLE: "Idle",
     HELP_TRIGGERED: "Help Triggered",
+    CALL_READY: "Call Ready",
     IN_SESSION: "In Session",
     ESCALATED: "Escalated",
   };

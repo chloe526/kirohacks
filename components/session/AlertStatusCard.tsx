@@ -47,6 +47,8 @@ export function AlertStatusCard({
     switch (status) {
       case "HELP_TRIGGERED":
         return "border-amber-500 bg-amber-500/5 animate-pulse";
+      case "CALL_READY":
+        return "border-sky-500 bg-sky-500/5";
       case "IN_SESSION":
         return "border-green-500 bg-green-500/5";
       case "ESCALATED":
@@ -73,6 +75,21 @@ export function AlertStatusCard({
                 Help triggered {relativeTime}
               </p>
             )}
+          </div>
+        );
+
+      case "CALL_READY":
+        return (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="h-2.5 w-2.5 rounded-full bg-blue-500" />
+              <h3 className="text-sm font-semibold text-blue-400">
+                Call Ready
+              </h3>
+            </div>
+            <p className="text-sm text-slate-300">
+              Patient is ready for a clinician to connect.
+            </p>
           </div>
         );
 

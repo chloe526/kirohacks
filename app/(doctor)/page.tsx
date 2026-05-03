@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePatientStore } from "@/stores/patientStore";
+import { useRobotStateSync } from "@/hooks/useRobotStateSync";
 import { get, post } from "@/lib/apiClient";
 import { POLL_INTERVAL_MS } from "@/lib/constants";
 import { PatientCard } from "@/components/dashboard/PatientCard";
@@ -30,6 +31,9 @@ export default function DashboardPage() {
   const [joiningPatientId, setJoiningPatientId] = useState<string | null>(null);
   const [joinError, setJoinError] = useState<Record<string, string>>({});
   const [activeFilter, setActiveFilter] = useState<FilterTab>("All");
+
+  // Enable live robot state sync from http://10.40.98.25:8081/state
+  useRobotStateSync();
 
   const fetchPatients = async () => {
     try {
@@ -74,19 +78,19 @@ export default function DashboardPage() {
 
     setPatients([
       ...Object.values(patients).map((p) =>
-        p.patient_id === patientId ? optimisticUpdate : p
+        p.patient_id === patientId ? optimisticUpdate : p,
       ),
     ]);
 
     try {
       const updatedPatient = await post<PatientRecord>(
         `/patients/${patientId}/join`,
-        { clinician_id: "doc-456" }
+        { clinician_id: "doc-456" },
       );
 
       setPatients([
         ...Object.values(patients).map((p) =>
-          p.patient_id === patientId ? updatedPatient : p
+          p.patient_id === patientId ? updatedPatient : p,
         ),
       ]);
 
@@ -94,7 +98,7 @@ export default function DashboardPage() {
     } catch (err) {
       setPatients([
         ...Object.values(patients).map((p) =>
-          p.patient_id === patientId ? patient : p
+          p.patient_id === patientId ? patient : p,
         ),
       ]);
 
@@ -114,9 +118,10 @@ export default function DashboardPage() {
   const getSortedPatients = (): PatientRecord[] => {
     const statusPriority: Record<PatientStatus, number> = {
       HELP_TRIGGERED: 1,
-      IN_SESSION: 2,
-      ESCALATED: 3,
-      IDLE: 4,
+      CALL_READY: 2,
+      IN_SESSION: 3,
+      ESCALATED: 4,
+      IDLE: 5,
     };
 
     return Object.values(patients).sort((a, b) => {
@@ -145,13 +150,13 @@ export default function DashboardPage() {
   // ── Stats ──────────────────────────────────────────────────────────────────
   const totalPatients = allPatients.length;
   const needsHelpCount = allPatients.filter(
-    (p) => p.status === "HELP_TRIGGERED"
+    (p) => p.status === "HELP_TRIGGERED" || p.status === "CALL_READY",
   ).length;
   const inSessionCount = allPatients.filter(
-    (p) => p.status === "IN_SESSION"
+    (p) => p.status === "IN_SESSION",
   ).length;
   const escalatedCount = allPatients.filter(
-    (p) => p.status === "ESCALATED"
+    (p) => p.status === "ESCALATED",
   ).length;
   const idleCount = allPatients.filter((p) => p.status === "IDLE").length;
 
@@ -168,7 +173,8 @@ export default function DashboardPage() {
 
   const filteredPatients = allPatients.filter((p) => {
     if (activeFilter === "All") return true;
-    if (activeFilter === "Needs Help") return p.status === "HELP_TRIGGERED";
+    if (activeFilter === "Needs Help")
+      return p.status === "HELP_TRIGGERED" || p.status === "CALL_READY";
     if (activeFilter === "In Session") return p.status === "IN_SESSION";
     if (activeFilter === "Idle") return p.status === "IDLE";
     if (activeFilter === "Escalated") return p.status === "ESCALATED";
@@ -371,7 +377,12 @@ export default function DashboardPage() {
 
 function HeartIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      className={className}
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
     </svg>
   );
@@ -379,48 +390,114 @@ function HeartIcon({ className }: { className?: string }) {
 
 function UsersIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+      />
     </svg>
   );
 }
 
 function BellIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+      />
     </svg>
   );
 }
 
 function VideoIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+      />
     </svg>
   );
 }
 
 function AlertCircleIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
     </svg>
   );
 }
 
 function TriangleAlertIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+      />
     </svg>
   );
 }
 
 function WifiIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
+      />
     </svg>
   );
 }
