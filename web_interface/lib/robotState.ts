@@ -16,11 +16,14 @@ const ROBOT_STATE_URL = "http://10.40.98.25:8081/state";
 /** Minimal shape we expect from the robot state endpoint. */
 interface RobotStateResponse {
   status?: string;
-  connection?: string;
-  battery?: number;
-  last_command?: string;
-  last_command_at?: string;
+  last_updated?: string;
   help_event?: { triggered_at: string | null };
+  robot?: {
+    connection?: string;
+    battery?: number;
+    last_command?: string;
+    last_command_at?: string;
+  };
   session?: {
     session_id: string | null;
     active: boolean;
@@ -99,10 +102,10 @@ export async function fetchLivePatient(
       },
 
       robot: {
-        connection: state.connection ?? baseRecord.robot.connection,
-        battery: state.battery ?? baseRecord.robot.battery,
-        last_command: nullify(state.last_command) ?? baseRecord.robot.last_command,
-        last_command_at: nullify(state.last_command_at) ?? baseRecord.robot.last_command_at,
+        connection: state.robot?.connection ?? baseRecord.robot.connection,
+        battery: state.robot?.battery ?? baseRecord.robot.battery,
+        last_command: nullify(state.robot?.last_command) ?? baseRecord.robot.last_command,
+        last_command_at: nullify(state.robot?.last_command_at) ?? baseRecord.robot.last_command_at,
       },
 
       session: state.session

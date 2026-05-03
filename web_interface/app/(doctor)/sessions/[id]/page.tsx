@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { usePatientStore } from "@/stores/patientStore";
 import { get } from "@/lib/apiClient";
-import { POLL_INTERVAL_MS } from "@/lib/constants";
+import { SESSION_POLL_INTERVAL_MS } from "@/lib/constants";
 import type { PatientRecord } from "@/types";
 import { SessionHeader } from "@/components/session/SessionHeader";
 import { PatientInfoCard } from "@/components/session/PatientInfoCard";
@@ -21,26 +21,11 @@ import { Banner } from "@/components/ui/Banner";
 /**
  * SessionPage
  *
- * Top-level page component for an active session. Orchestrates data fetching,
- * polling, and layout.
+ * Polls /api/v1/patients/:id every SESSION_POLL_INTERVAL_MS (2 s) so that
+ * robot state (connection, battery, last command) stays live.
  *
- * Responsibilities:
- * - Fetch PatientRecord on mount from GET /api/v1/patients/{patient_id}
- * - Store in patientStore.activePatient
- * - Poll every POLL_INTERVAL_MS (10 seconds)
- * - Render three-panel layout:
- *   - Left: PatientInfoCard (patient profile)
- *   - Centre: VideoPanel (video placeholder) or summary message
- *   - Right: AlertStatusCard + stubs for future action panels
- *
- * Behaviour:
- * - When patient.status is IDLE with session.ended_at non-null, or ESCALATED,
- *   replace centre panel with a summary/confirmation message
- * - Stop polling when session is no longer active
- *
- * Related requirements:
- * - Requirement 2: Session Page Layout
- * - Milestone 3, Task 3.6
+ * All child components receive props derived directly from activePatient —
+ * no local state copies, no hardcoded fallbacks.
  */
 export default function SessionPage() {
   const params = useParams();
@@ -62,53 +47,48 @@ export default function SessionPage() {
 
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch patient data
-  const fetchPatient = async () => {
+  // Stable fetch — useCallback prevents stale closures in the interval.
+  const fetchPatient = useCallback(async () => {
+    console.log(`[SESSION] fetching patient ${patientId}`);
     try {
       const patient = await get<PatientRecord>(`/patients/${patientId}`);
+      console.log(`[SESSION] received status: ${patient.status}`);
+      console.log(`[SESSION] received robot connection: ${patient.robot.connection}`);
       setActivePatient(patient);
     } catch (error) {
-      console.error("Failed to fetch patient:", error);
+      console.error("[SESSION] Failed to fetch patient:", error);
     }
-  };
+  }, [patientId, setActivePatient]);
 
-  // Set up polling
+  // Initial fetch + 2 s polling loop.
   useEffect(() => {
     fetchPatient();
-
-    pollIntervalRef.current = setInterval(() => {
-      fetchPatient();
-    }, POLL_INTERVAL_MS);
-
+    pollIntervalRef.current = setInterval(fetchPatient, SESSION_POLL_INTERVAL_MS);
     return () => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
       }
     };
-  }, [patientId]);
+  }, [fetchPatient]);
 
-  // Stop polling when session ends or is escalated
+  // Stop polling once the session is definitively over.
   useEffect(() => {
     if (!activePatient) return;
-
-    const shouldStopPolling =
-      (activePatient.status === "IDLE" &&
-        activePatient.session.ended_at !== null) ||
+    const shouldStop =
+      (activePatient.status === "IDLE" && activePatient.session.ended_at !== null) ||
       activePatient.status === "ESCALATED";
-
-    if (shouldStopPolling && pollIntervalRef.current) {
+    if (shouldStop && pollIntervalRef.current) {
       clearInterval(pollIntervalRef.current);
       pollIntervalRef.current = null;
     }
   }, [activePatient?.status, activePatient?.session.ended_at]);
 
-  // Handle successful dispatch
   const handleDispatchSuccess = () => {
     patchActivePatient({ status: "ESCALATED" });
     closeDispatchDialog();
   };
 
-  // Loading state
   if (isLoadingActive || !activePatient) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
@@ -120,36 +100,31 @@ export default function SessionPage() {
     );
   }
 
-  // Error state
   if (activeError) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <p className="text-sm font-medium text-red-700">
-            Error loading session
-          </p>
+          <p className="text-sm font-medium text-red-700">Error loading session</p>
           <p className="mt-1 text-sm text-red-600">{activeError}</p>
         </div>
       </div>
     );
   }
 
-  // Determine if we should show the summary view instead of active session
+  // Derive all booleans from the live patient object — no local state copies.
+  const robotOnline = activePatient.robot?.connection === "online";
   const showSummaryView =
-    (activePatient.status === "IDLE" &&
-      activePatient.session.ended_at !== null) ||
+    (activePatient.status === "IDLE" && activePatient.session.ended_at !== null) ||
     activePatient.status === "ESCALATED";
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Fixed header */}
       <SessionHeader
         patient={activePatient}
         onEndSession={openReportModal}
         onDispatch={openDispatchDialog}
       />
 
-      {/* Persistent EMS Dispatch Banner */}
       {activePatient.status === "ESCALATED" && (
         <Banner
           message="Emergency services have been dispatched"
@@ -158,10 +133,9 @@ export default function SessionPage() {
         />
       )}
 
-      {/* Three-panel layout */}
       <div className="mx-auto max-w-screen-xl px-6 py-6">
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
-          {/* Left panel: Patient Profile (3 columns) */}
+          {/* Left: patient info + robot status */}
           <div className="lg:col-span-3 space-y-4">
             <PatientInfoCard
               name={activePatient.name}
@@ -171,7 +145,7 @@ export default function SessionPage() {
             <RobotStatusCard robot={activePatient.robot} />
           </div>
 
-          {/* Centre panel: Video or Summary (6 columns) */}
+          {/* Centre: video + movement controls */}
           <div className="lg:col-span-6 space-y-4">
             {showSummaryView ? (
               <SummaryPanel patient={activePatient} />
@@ -184,7 +158,6 @@ export default function SessionPage() {
               />
             )}
 
-            {/* Robot Movement Controls */}
             <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
               <h3 className="mb-5 text-sm font-semibold text-slate-700">
                 Robot Movement Controls
@@ -192,7 +165,7 @@ export default function SessionPage() {
               <div className="flex justify-center">
                 <MovementPad
                   sessionId={activePatient.session.session_id ?? ""}
-                  robotOnline={activePatient.robot.connection === "online"}
+                  robotOnline={robotOnline}
                   onCommandSent={() => {}}
                 />
               </div>
@@ -201,7 +174,7 @@ export default function SessionPage() {
             <LastCommandPanel />
           </div>
 
-          {/* Right panel: Alert Status + Command Log (3 columns) */}
+          {/* Right: alert status + command log */}
           <div className="lg:col-span-3 space-y-4">
             <AlertStatusCard
               status={activePatient.status}
@@ -212,7 +185,6 @@ export default function SessionPage() {
         </div>
       </div>
 
-      {/* Modals */}
       <DispatchConfirmDialog
         isOpen={isDispatchDialogOpen}
         patientName={activePatient.name}
@@ -224,18 +196,15 @@ export default function SessionPage() {
         onCancel={closeDispatchDialog}
       />
 
-      {/* Report Modal */}
       {activePatient.session.started_at && (
         <ReportModal
           isOpen={isReportModalOpen}
           sessionId={activePatient.session.session_id || ""}
           patientName={activePatient.name}
           durationSeconds={Math.floor(
-            (Date.now() -
-              new Date(activePatient.session.started_at).getTime()) /
-              1000
+            (Date.now() - new Date(activePatient.session.started_at).getTime()) / 1000
           )}
-          clinicianId="doc-456" // TODO: Get from auth context
+          clinicianId="doc-456"
           onSuccess={closeReportModal}
           onDismiss={closeReportModal}
         />

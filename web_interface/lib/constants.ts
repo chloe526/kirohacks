@@ -13,6 +13,9 @@ export const POLL_INTERVAL_MS = 10_000;
 /** How often the Session Page re-fetches the PatientRecord for robot status (Req 4.5) */
 export const ROBOT_POLL_INTERVAL_MS = 15_000;
 
+/** How often the Session Page polls for live robot state updates */
+export const SESSION_POLL_INTERVAL_MS = 2_000;
+
 /** How often the Patient Status Screen re-fetches the PatientRecord (Req 11.7) */
 export const PATIENT_STATUS_POLL_MS = 5_000;
 
