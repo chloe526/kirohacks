@@ -65,6 +65,13 @@ export function useAudioSocket(
   const exhaustedRef = useRef(false);
   // Track whether the hook is still mounted / active
   const activeRef = useRef(active);
+  /**
+   * Scheduled playhead: the AudioContext time at which the *next* decoded
+   * chunk should start playing. Keeping this cursor means chunks are
+   * scheduled back-to-back regardless of how long decodeAudioData takes,
+   * eliminating the multi-second buffering caused by unscheduled start().
+   */
+  const nextPlayTimeRef = useRef(0);
 
   // Keep activeRef in sync
   useEffect(() => {
@@ -138,6 +145,9 @@ export function useAudioSocket(
       reconnectCountRef.current = 0;
       setReconnectCount(0);
       exhaustedRef.current = false;
+      // Reset the playhead so the first chunk is scheduled from now,
+      // not from a stale timestamp left over from a previous connection.
+      nextPlayTimeRef.current = 0;
 
       // Create the AudioContext lazily on first successful connection
       if (audioCtxRef.current === null) {
@@ -187,7 +197,15 @@ export function useAudioSocket(
         const source = audioCtx.createBufferSource();
         source.buffer = decoded;
         source.connect(audioCtx.destination);
-        source.start();
+
+        // Schedule this chunk immediately after the previous one.
+        // If the playhead has fallen behind currentTime (e.g. on first chunk
+        // or after a gap), snap it forward to now + a small lookahead so the
+        // browser has time to render the buffer without glitching.
+        const LOOKAHEAD_S = 0.05; // 50 ms scheduling lookahead
+        const startAt = Math.max(nextPlayTimeRef.current, audioCtx.currentTime + LOOKAHEAD_S);
+        source.start(startAt);
+        nextPlayTimeRef.current = startAt + decoded.duration;
       } catch {
         // Silently ignore decode errors — the stream may send partial/invalid frames
       }

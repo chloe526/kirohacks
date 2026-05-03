@@ -18,6 +18,7 @@ Usage:
 import argparse
 import contextlib
 import os
+import queue
 import socket
 import struct
 import threading
@@ -47,7 +48,19 @@ RESPEAKER_RATE = 16000
 RESPEAKER_CHANNELS = 6      # 6-channel firmware required
 RESPEAKER_WIDTH = 2         # int16
 AUDIO_CHUNK = 512           # ~32 ms per chunk at 16 kHz — smaller = lower latency
-AUDIO_DRAIN_CHUNKS = 4      # discard this many chunks on connect to flush stale buffer
+# Flush enough chunks to clear the OS + PyAudio ring buffer on connect.
+# PyAudio's default ring buffer is ~1 s; the OS ALSA buffer adds another ~0.5 s.
+# Draining 64 chunks × 32 ms = ~2 s guarantees we start from live audio.
+AUDIO_DRAIN_CHUNKS = 64
+
+# Doctor → robot audio playback
+# Raw signed-16-bit mono PCM at 16 kHz, matching what the browser sends.
+SPEAKER_RATE = 16000
+SPEAKER_WIDTH = 2           # int16
+SPEAKER_CHANNELS = 1        # mono
+SPEAKER_CHUNK = 512         # frames per PyAudio output write
+# Max queued chunks before we start dropping to avoid runaway latency.
+SPEAKER_QUEUE_MAX = 64
 
 # ---------------------------------------------------------------------------
 # Shared state — latest JPEG frame
@@ -55,6 +68,13 @@ AUDIO_DRAIN_CHUNKS = 4      # discard this many chunks on connect to flush stale
 latest_jpeg: bytes = b""
 jpeg_lock = threading.Lock()
 jpeg_event = threading.Event()
+
+# ---------------------------------------------------------------------------
+# Shared state — doctor→robot speaker queue
+# ---------------------------------------------------------------------------
+# Raw signed-16-bit mono PCM chunks at SPEAKER_RATE are pushed here by the
+# POST /audio-input handler and consumed by the speaker playback thread.
+speaker_queue: queue.Queue[bytes] = queue.Queue(maxsize=SPEAKER_QUEUE_MAX)
 
 # ---------------------------------------------------------------------------
 # Suppress ALSA stderr noise
@@ -185,6 +205,53 @@ def camera_capture_loop(pipeline: rs.pipeline, stop_event: threading.Event) -> N
         jpeg_event.set()
 
 # ---------------------------------------------------------------------------
+# Background thread: play doctor audio through the robot speaker
+# ---------------------------------------------------------------------------
+
+def speaker_playback_loop(stop_event: threading.Event) -> None:
+    """
+    Drain speaker_queue and write raw PCM to the default output device.
+
+    Runs as a daemon thread. Opens a single persistent PyAudio output stream
+    so there is no per-chunk open/close overhead. If the output device is
+    unavailable the thread logs a warning and exits gracefully — the robot
+    will simply have no speaker output rather than crashing.
+    """
+    with ignore_stderr():
+        pa = pyaudio.PyAudio()
+
+    try:
+        stream = pa.open(
+            rate=SPEAKER_RATE,
+            format=pa.get_format_from_width(SPEAKER_WIDTH),
+            channels=SPEAKER_CHANNELS,
+            output=True,
+            frames_per_buffer=SPEAKER_CHUNK,
+        )
+    except OSError as exc:
+        print(f"[speaker] Failed to open output stream: {exc}")
+        pa.terminate()
+        return
+
+    print("[speaker] Output stream ready.")
+
+    try:
+        while not stop_event.is_set():
+            try:
+                chunk = speaker_queue.get(timeout=0.1)
+            except queue.Empty:
+                continue
+            try:
+                stream.write(chunk)
+            except OSError as exc:
+                print(f"[speaker] Write error: {exc}")
+    finally:
+        stream.stop_stream()
+        stream.close()
+        pa.terminate()
+        print("[speaker] Output stream closed.")
+
+# ---------------------------------------------------------------------------
 # WAV header for streaming
 # ---------------------------------------------------------------------------
 
@@ -245,6 +312,51 @@ class StreamHandler(BaseHTTPRequestHandler):
         else:
             self.send_error(404)
 
+    def do_POST(self):
+        path = self.path.split("?")[0]
+        if path == "/audio-input":
+            self._receive_audio_input()
+        else:
+            self.send_error(404)
+
+    def _receive_audio_input(self):
+        """
+        POST /audio-input
+
+        Accepts a chunk of raw signed-16-bit mono PCM at SPEAKER_RATE (16 kHz)
+        from the doctor's browser (proxied through Next.js) and enqueues it for
+        playback on the robot speaker.
+
+        The browser sends one HTTP POST per MediaRecorder chunk (~100 ms of
+        audio). Content-Length is required so we know how many bytes to read.
+
+        If the speaker queue is full (doctor is sending faster than the speaker
+        can play) the oldest chunk is dropped to keep latency low.
+        """
+        length = int(self.headers.get("Content-Length", 0))
+        if length == 0:
+            self.send_response(400)
+            self.end_headers()
+            return
+
+        data = self.rfile.read(length)
+
+        # Drop oldest chunk rather than blocking if the queue is full
+        if speaker_queue.full():
+            try:
+                speaker_queue.get_nowait()
+            except queue.Empty:
+                pass
+
+        try:
+            speaker_queue.put_nowait(data)
+        except queue.Full:
+            pass  # extremely unlikely after the drain above
+
+        self.send_response(204)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def _serve_html(self):
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -291,6 +403,10 @@ class StreamHandler(BaseHTTPRequestHandler):
                 input=True,
                 input_device_index=self._respeaker_index,
                 frames_per_buffer=AUDIO_CHUNK,
+                # Keep the ring buffer as small as possible so stale audio
+                # cannot accumulate between the time the stream is opened and
+                # the time the drain loop runs.
+                input_buffer_size=AUDIO_CHUNK * 4,
             )
         except OSError as exc:
             print(f"[audio] Failed to open stream: {exc}")
@@ -368,6 +484,15 @@ def main() -> None:
         name="camera-capture",
     )
     capture_thread.start()
+
+    # Start speaker playback thread (doctor → robot audio)
+    speaker_thread = threading.Thread(
+        target=speaker_playback_loop,
+        args=(stop_event,),
+        daemon=True,
+        name="speaker-playback",
+    )
+    speaker_thread.start()
 
     # Build HTTP server with respeaker_index baked into the handler
     def handler_factory(*args, **kwargs):

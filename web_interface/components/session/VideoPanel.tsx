@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Mic, MicOff, Loader2 } from "lucide-react";
+import { Mic, MicOff, Loader2, Radio } from "lucide-react";
 import { useAudioSocket } from "@/hooks/useAudioSocket";
+import { useDocAudio } from "@/hooks/useDocAudio";
 
 interface VideoPanelProps {
   patientName: string;
@@ -34,6 +35,8 @@ export function VideoPanel({
 
   const { connectionState, isMuted, toggleMute, reconnectCount } =
     useAudioSocket(sessionId, sessionActive);
+
+  const { micState, micError, startMic, stopMic } = useDocAudio(sessionActive);
 
   const isMockMode = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
 
@@ -107,6 +110,40 @@ export function VideoPanel({
     );
   };
 
+  const renderMicToggle = () => {
+    const isActive = micState === "active";
+    const isRequesting = micState === "requesting";
+
+    return (
+      <div className="flex flex-col items-end gap-1">
+        <button
+          onClick={isActive ? stopMic : startMic}
+          disabled={isRequesting || !sessionActive}
+          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:ring-offset-slate-900 ${
+            !sessionActive || isRequesting
+              ? "bg-slate-700 text-slate-500 cursor-not-allowed"
+              : isActive
+                ? "bg-blue-500/20 text-blue-400 border border-blue-500 hover:bg-blue-500/30"
+                : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+          }`}
+          aria-label={isActive ? "Stop speaking to robot" : "Speak to robot"}
+        >
+          {isRequesting ? (
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Radio className="w-4 h-4" aria-hidden="true" />
+          )}
+          <span>
+            {isRequesting ? "Requesting…" : isActive ? "Speaking" : "Speak"}
+          </span>
+        </button>
+        {micError && (
+          <p className="text-xs text-red-400 max-w-[160px] text-right">{micError}</p>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="relative w-full bg-slate-900 rounded-lg border border-slate-700 overflow-hidden">
       {/* 16:9 aspect ratio container with minimum height */}
@@ -155,8 +192,9 @@ export function VideoPanel({
           </div>
         </div>
 
-        {/* Mute/unmute toggle — bottom-right */}
-        <div className="absolute bottom-4 right-4 z-10">
+        {/* Mute/unmute toggle and speak toggle — bottom-right */}
+        <div className="absolute bottom-4 right-4 z-10 flex items-end gap-2">
+          {renderMicToggle()}
           {renderMuteToggle()}
         </div>
       </div>

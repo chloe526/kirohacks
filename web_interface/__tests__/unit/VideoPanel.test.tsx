@@ -13,6 +13,16 @@ vi.mock("@/hooks/useAudioSocket", () => ({
   })),
 }));
 
+// Mock the useDocAudio hook
+vi.mock("@/hooks/useDocAudio", () => ({
+  useDocAudio: vi.fn(() => ({
+    micState: "idle",
+    micError: null,
+    startMic: vi.fn(),
+    stopMic: vi.fn(),
+  })),
+}));
+
 describe("VideoPanel", () => {
   const defaultProps = {
     patientName: "John Doe",
