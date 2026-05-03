@@ -171,23 +171,6 @@ def camera_capture_loop(pipeline: rs.pipeline, stop_event: threading.Event) -> N
             continue
 
         img = np.asanyarray(color_frame.get_data())
-
-        # Normalize to BGR8 regardless of the stream's native format
-        fmt = color_frame.profile.as_video_stream_profile().format()
-        if fmt == rs.format.rgb8:
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        elif fmt == rs.format.rgba8:
-            img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGR)
-        elif fmt == rs.format.bgra8:
-            img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
-        elif fmt == rs.format.yuyv:
-            img = cv2.cvtColor(img, cv2.COLOR_YUV2BGR_YUYV)
-        # bgr8 needs no conversion; other formats fall through as-is
-
-        # Ensure 8-bit depth
-        if img.dtype != np.uint8:
-            img = (img / img.max() * 255).astype(np.uint8)
-
         ret, jpeg = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY])
         if not ret:
             continue
