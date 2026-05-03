@@ -19,8 +19,7 @@ def main():
 
     while True:
         server.state["status"] = "IDLE"
-        now = datetime.datetime.now().isoformat()
-        server.state["help_event"]["triggered"] = now
+        server.state["last_update"] = datetime.datetime.now().isoformat()
 
         return_code = os.system("python3 detect_voice.py")
 
@@ -28,6 +27,7 @@ def main():
             # time.sleep(5)
             now = datetime.datetime.now().isoformat()
             server.state["help_event"]["triggered"] = now
+            server.state["last_update"] = now
 
             server.state["status"] = "HELP_TRIGGERED"
 

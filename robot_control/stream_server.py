@@ -371,8 +371,7 @@ def main() -> None:
     print("Press Ctrl+C to stop.")
 
     server.state["status"] = "CALL_READY"
-    now = datetime.datetime.now().isoformat()
-    server.state["help_event"]["triggered"] = now
+    server.state["last_update"] = datetime.datetime.now().isoformat()
 
     try:
         httpd.serve_forever()
