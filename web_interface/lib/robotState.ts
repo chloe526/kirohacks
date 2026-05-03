@@ -13,7 +13,7 @@
 
 const ROBOT_STATE_URL = "http://10.40.98.25:8081/state";
 
-/** Minimal shape we expect from the robot state endpoint. */
+/** Actual nested shape returned by the robot state endpoint. */
 interface RobotStateResponse {
   status?: string;
   last_updated?: string;
@@ -61,7 +61,7 @@ export async function fetchLivePatient(
     }
 
     const state: RobotStateResponse = await res.json();
-    console.log("[LIVE] using robot state for pat-0001");
+    console.log("[ROBOT STATE RAW]", state);
 
     const baseRecord = base as {
       patient_id: string;
@@ -84,28 +84,30 @@ export async function fetchLivePatient(
       };
     };
 
-    return {
+    const merged = {
       // Identity — always from fixture
       patient_id: baseRecord.patient_id,
       name: baseRecord.name,
       address: baseRecord.address,
 
-      // Live state fields — live endpoint is source of truth
+      // Live state — robot endpoint is source of truth
       status: state.status ?? baseRecord.status,
       last_updated: new Date().toISOString(),
 
       help_event: {
         triggered_at: nullify(
-          state.help_event?.triggered_at ??
-          baseRecord.help_event.triggered_at
+          state.help_event?.triggered_at ?? baseRecord.help_event.triggered_at
         ),
       },
 
       robot: {
         connection: state.robot?.connection ?? baseRecord.robot.connection,
         battery: state.robot?.battery ?? baseRecord.robot.battery,
-        last_command: nullify(state.robot?.last_command) ?? baseRecord.robot.last_command,
-        last_command_at: nullify(state.robot?.last_command_at) ?? baseRecord.robot.last_command_at,
+        last_command:
+          nullify(state.robot?.last_command) ?? baseRecord.robot.last_command,
+        last_command_at:
+          nullify(state.robot?.last_command_at) ??
+          baseRecord.robot.last_command_at,
       },
 
       session: state.session
@@ -119,6 +121,9 @@ export async function fetchLivePatient(
 
       live_state_connected: true,
     };
+
+    console.log("[ROBOT STATE MERGED] robot:", merged.robot);
+    return merged;
   } catch (err) {
     console.warn("[FALLBACK] robot state unavailable for pat-0001:", err);
     return { ...base, live_state_connected: false };

@@ -4,7 +4,9 @@ import React, { useState, useCallback, useRef } from "react";
 import type { RobotAction, RobotCommand } from "@/types";
 import { useCommandStore } from "@/stores/commandStore";
 import { usePatientStore } from "@/stores/patientStore";
-import { post } from "@/lib/apiClient";
+
+// Server-side proxy — avoids CORS when calling the robot IP directly from the browser
+const ROBOT_COMMAND_URL = "/api/v1/robot/command";
 
 interface CommandButtonProps {
   sessionId: string;
@@ -18,20 +20,15 @@ interface CommandButtonProps {
 type ButtonStatus = "idle" | "sent" | "failed";
 
 /**
- * CommandButton — sends a single robot command to the API.
+ * CommandButton — sends a single robot command via the Next.js proxy.
  *
- * Behaviour:
- * - Builds a RobotCommand { session_id, action, issued_at } on click.
- * - POSTs to /api/v1/sessions/{sessionId}/commands via apiClient.
- * - On success: updates commandStore and patientStore, shows green "Command sent" for 3 s.
- * - On failure: updates commandStore, shows red "Command failed" for 3 s.
- * - Disabled while a command is in-flight (prevents double-clicks).
- * - Calls onCommandSent(cmd) if provided, regardless of success/failure.
+ * Flow:
+ *   click → POST /api/v1/robot/command { move: action }
+ *         → proxy forwards PUT http://10.40.98.25:8081/state { move: action }
+ *         → on success: update command log + patch full patient state from response
+ *         → on failure: log error, show "Command failed" indicator
  *
- * Related requirements:
- * - Requirement 6: Robot Control UI
- * - Acceptance Criteria 6.1: Construct RobotCommand JSON and POST on click
- * - Acceptance Criteria 6.2: Show "Command sent" / "Command failed" for 3 s
+ * The command log entry is only added after the proxy confirms success.
  */
 export function CommandButton({
   sessionId,
@@ -61,17 +58,36 @@ export function CommandButton({
     inFlightRef.current = true;
 
     try {
-      await post(`/sessions/${sessionId}/commands`, cmd);
+      console.log("[ROBOT COMMAND] sending", action);
 
-      addCommand(cmd, true);
-      patchActivePatient({
-        robot: {
-          last_command: cmd.action,
-          last_command_at: cmd.issued_at,
-        } as never,
+      const res = await fetch(ROBOT_COMMAND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ move: action }),
       });
+
+      console.log("[ROBOT COMMAND] proxy status", res.status);
+      const data = await res.json();
+      console.log("[ROBOT COMMAND] proxy response", data);
+
+      if (!res.ok) {
+        throw new Error(data?.error ?? `HTTP ${res.status}`);
+      }
+
+      console.log("[ROBOT COMMAND] sent:", action);
+
+      // Add to command log only after confirmed success
+      addCommand(cmd, true);
+
+      // Patch the full patient state from the robot's response — preserves
+      // connection, battery, and all other fields rather than overwriting piecemeal
+      if (data?.state) {
+        patchActivePatient(data.state);
+      }
+
       setStatus("sent");
-    } catch {
+    } catch (error) {
+      console.error("[ROBOT COMMAND] failed:", action, error);
       addCommand(cmd, false);
       setStatus("failed");
     } finally {
