@@ -1,3 +1,4 @@
+import "../globals.css";
 import { ToastContainer } from "@/components/ui/ToastContainer";
 
 export const metadata = {

@@ -90,8 +90,8 @@ export function VideoPanel({
           isDisabled
             ? "bg-slate-700 text-slate-500 cursor-not-allowed"
             : isMuted
-            ? "bg-red-500/20 text-red-400 border border-red-500 hover:bg-red-500/30"
-            : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+              ? "bg-red-500/20 text-red-400 border border-red-500 hover:bg-red-500/30"
+              : "bg-slate-700 text-slate-300 hover:bg-slate-600"
         }`}
         aria-label={isMuted ? "Unmute audio" : "Mute audio"}
       >
@@ -137,17 +137,27 @@ export function VideoPanel({
           {renderAudioStatus()}
         </div>
 
-        {/* Center content: camera icon and placeholder text */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-          <Camera
-            className="w-16 h-16 text-slate-600"
-            aria-hidden="true"
-            strokeWidth={1.5}
+        {/* Center content: live iframe if configured, otherwise placeholder */}
+        {process.env.NEXT_PUBLIC_ROBOT_STREAM_URL ? (
+          <iframe
+            src={process.env.NEXT_PUBLIC_ROBOT_STREAM_URL}
+            title={`Live robot video feed for ${patientName}`}
+            className="absolute inset-0 h-full w-full border-0 bg-slate-950"
+            allow="camera; microphone; autoplay; fullscreen"
+            allowFullScreen
           />
-          <p className="text-slate-400 text-sm font-medium">
-            Live video feed — not yet connected
-          </p>
-        </div>
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+            <Camera
+              className="w-16 h-16 text-slate-600"
+              aria-hidden="true"
+              strokeWidth={1.5}
+            />
+            <p className="text-slate-400 text-sm font-medium">
+              Live video feed — not yet connected
+            </p>
+          </div>
+        )}
 
         {/* Patient name overlay — bottom-left */}
         <div className="absolute bottom-4 left-4 z-10">

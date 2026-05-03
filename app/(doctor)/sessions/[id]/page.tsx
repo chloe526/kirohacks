@@ -162,7 +162,7 @@ export default function SessionPage() {
       <div className="mx-auto max-w-screen-xl px-6 py-6">
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
           {/* Left panel: Patient Profile (3 columns) */}
-          <div className="lg:col-span-3 space-y-5">
+          <div className="lg:col-span-3 space-y-4">
             <PatientInfoCard
               name={activePatient.name}
               addressLine1={activePatient.address.line1}
@@ -172,7 +172,7 @@ export default function SessionPage() {
           </div>
 
           {/* Centre panel: Video or Summary (6 columns) */}
-          <div className="lg:col-span-6 space-y-5">
+          <div className="lg:col-span-6 space-y-4">
             {showSummaryView ? (
               <SummaryPanel patient={activePatient} />
             ) : (
@@ -184,10 +184,10 @@ export default function SessionPage() {
               />
             )}
 
-            {/* Movement controls below video */}
-            <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="mb-4 text-sm font-semibold text-slate-700 uppercase tracking-wide">
-                Robot Controls
+            {/* Robot Movement Controls */}
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="mb-5 text-sm font-semibold text-slate-700">
+                Robot Movement Controls
               </h3>
               <div className="flex justify-center">
                 <MovementPad
@@ -202,7 +202,7 @@ export default function SessionPage() {
           </div>
 
           {/* Right panel: Alert Status + Command Log (3 columns) */}
-          <div className="lg:col-span-3 space-y-5">
+          <div className="lg:col-span-3 space-y-4">
             <AlertStatusCard
               status={activePatient.status}
               helpTriggeredAt={activePatient.help_event.triggered_at}

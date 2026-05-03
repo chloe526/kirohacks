@@ -1,6 +1,5 @@
 import type { PatientRecord } from "@/types";
-import { Badge } from "@/components/ui/Badge";
-import { formatLocalTime } from "@/lib/formatters";
+import { formatRelativeTime } from "@/lib/formatters";
 
 interface PatientCardProps {
   patient: PatientRecord;
@@ -9,68 +8,174 @@ interface PatientCardProps {
 }
 
 /**
- * PatientCard component displays a patient's current status on the dashboard.
- *
- * Features:
- * - Shows patient name, status badge, and last updated timestamp
- * - "Join Session" button enabled only when status is HELP_TRIGGERED
- * - Amber left border accent when HELP_TRIGGERED to communicate urgency
- * - Inline error display if join fails
+ * PatientCard — matches the Figma "Polished Healthcare Dashboard" design.
  *
  * Visual treatment by status:
- * - HELP_TRIGGERED: amber left border + very light amber background tint
- * - Other statuses: neutral white card
+ * - ESCALATED:      red border + bell icon badge + "Join Critical Session" red button
+ * - HELP_TRIGGERED: amber border + bell icon badge + "Join Urgent Session" amber button
+ * - IN_SESSION:     neutral border + green "Active" badge + pink "Join Session" button
+ * - IDLE:           neutral border + grey "Idle" badge + pink "Join Session" button
  */
 export function PatientCard({
   patient,
   onJoinSession,
   isJoining = false,
 }: PatientCardProps) {
-  const isHelpTriggered = patient.status === "HELP_TRIGGERED";
-  const canJoin = isHelpTriggered && !isJoining;
+  const { status, robot } = patient;
 
-  // Subtle urgency treatment — left border accent, no full-card pulse
-  const cardClasses = isHelpTriggered
-    ? "border-l-4 border-l-amber-400 border-t border-r border-b border-slate-200 bg-amber-50/40 animate-subtle-pulse"
-    : "border border-slate-200 bg-white";
+  // ── Card border style ──────────────────────────────────────────────────────
+  const cardBorder =
+    status === "ESCALATED"
+      ? "border-2 border-red-400"
+      : status === "HELP_TRIGGERED"
+        ? "border-2 border-amber-400"
+        : "border border-slate-200";
 
-  const handleJoinClick = () => {
-    if (canJoin) {
-      onJoinSession(patient.patient_id);
+  // ── Corner notification bell (Escalated / Help Triggered only) ────────────
+  const showCornerBell = status === "ESCALATED" || status === "HELP_TRIGGERED";
+  const cornerBellColor =
+    status === "ESCALATED" ? "text-red-500 bg-red-50" : "text-amber-500 bg-amber-50";
+
+  // ── Status badge ──────────────────────────────────────────────────────────
+  const StatusBadge = () => {
+    if (status === "ESCALATED") {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-600">
+          <BellIcon className="h-3 w-3" />
+          Escalated
+        </span>
+      );
     }
+    if (status === "HELP_TRIGGERED") {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-600">
+          <BellIcon className="h-3 w-3" />
+          Help Triggered
+        </span>
+      );
+    }
+    if (status === "IN_SESSION") {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-600">
+          <VideoIcon className="h-3 w-3" />
+          Active
+        </span>
+      );
+    }
+    // IDLE
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-500">
+        <ActivityIcon className="h-3 w-3" />
+        Idle
+      </span>
+    );
   };
 
+  // ── Priority row (Escalated / Help Triggered only) ────────────────────────
+  const PriorityRow = () => {
+    if (status === "ESCALATED") {
+      return (
+        <div className="mb-3 flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-3 py-1.5">
+          <span className="text-xs font-semibold text-red-600">Priority: Critical</span>
+          <span className="text-xs font-medium text-red-500">EMS dispatched</span>
+        </div>
+      );
+    }
+    if (status === "HELP_TRIGGERED") {
+      return (
+        <div className="mb-3 flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5">
+          <span className="text-xs font-semibold text-amber-600">Priority: Medium</span>
+          <span className="text-xs font-medium text-amber-500">Awaiting clinician</span>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // ── Battery colour ────────────────────────────────────────────────────────
+  const batteryColor =
+    robot.battery <= 20
+      ? "text-red-500"
+      : robot.battery <= 50
+        ? "text-amber-500"
+        : "text-green-600";
+
+  // ── Help triggered time label ─────────────────────────────────────────────
+  const timeLabel =
+    status === "ESCALATED" || status === "HELP_TRIGGERED"
+      ? patient.help_event.triggered_at
+        ? `Help triggered ${formatRelativeTime(patient.help_event.triggered_at)}`
+        : null
+      : `Last updated: ${formatRelativeTime(patient.last_updated)}`;
+
+  // ── Join button ───────────────────────────────────────────────────────────
+  const joinButtonClasses =
+    status === "ESCALATED"
+      ? "bg-red-600 hover:bg-red-700 text-white"
+      : status === "HELP_TRIGGERED"
+        ? "bg-amber-500 hover:bg-amber-600 text-white"
+        : "bg-pink-500 hover:bg-pink-600 text-white";
+
+  const joinButtonLabel =
+    status === "ESCALATED"
+      ? "Join Critical Session"
+      : status === "HELP_TRIGGERED"
+        ? "Join Urgent Session"
+        : "Join Session";
+
   return (
-    <div
-      className={`rounded-lg p-5 shadow-sm transition-shadow hover:shadow-md ${cardClasses}`}
-    >
-      {/* Header: Name and Badge */}
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <h3 className="text-base font-semibold text-slate-900 leading-snug">
-          {patient.name}
-        </h3>
-        <Badge status={patient.status} />
+    <div className={`relative rounded-xl bg-white p-5 shadow-sm ${cardBorder}`}>
+      {/* Corner bell for urgent statuses */}
+      {showCornerBell && (
+        <div
+          className={`absolute -top-2.5 -right-2.5 flex h-6 w-6 items-center justify-center rounded-full ${cornerBellColor} shadow-sm`}
+          aria-hidden="true"
+        >
+          <BellIcon className="h-3.5 w-3.5" />
+        </div>
+      )}
+
+      {/* Patient name */}
+      <h3 className="mb-2 text-lg font-bold text-slate-900">{patient.name}</h3>
+
+      {/* Status badge */}
+      <div className="mb-3">
+        <StatusBadge />
       </div>
 
-      {/* Last Updated Timestamp */}
-      <p className="mb-4 text-xs text-slate-400">
-        Last updated: {formatLocalTime(patient.last_updated)}
-      </p>
+      {/* Priority row */}
+      <PriorityRow />
 
-      {/* Join Session Button */}
+      {/* Room + Robot info */}
+      <div className="mb-1 flex items-center gap-1.5 text-sm text-slate-600">
+        <LocationIcon className="h-4 w-4 text-slate-400 shrink-0" />
+        <span>{patient.address.line1}</span>
+      </div>
+      <div className="mb-3 flex items-center justify-between text-sm">
+        <span className="flex items-center gap-1.5 text-slate-500">
+          <WifiIcon className="h-4 w-4 text-slate-400 shrink-0" />
+          {robot.connection === "online" ? "Robot Connected" : "Robot Offline"}
+        </span>
+        <span className={`flex items-center gap-1 text-xs font-semibold ${batteryColor}`}>
+          <BatteryIcon className="h-4 w-4" />
+          {robot.battery}%
+        </span>
+      </div>
+
+      {/* Time label */}
+      {timeLabel && (
+        <p className="mb-4 flex items-center gap-1.5 text-xs text-slate-400">
+          <ClockIcon className="h-3.5 w-3.5 shrink-0" />
+          {timeLabel}
+        </p>
+      )}
+
+      {/* Join button */}
       <button
-        onClick={handleJoinClick}
-        disabled={!canJoin}
-        className={`
-          w-full rounded-md px-4 py-2 text-sm font-medium transition-colors
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-          ${
-            canJoin
-              ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
-              : "bg-slate-100 text-slate-400 cursor-not-allowed"
-          }
-        `}
-        aria-label={`Join session with ${patient.name}`}
+        onClick={() => onJoinSession(patient.patient_id)}
+        disabled={isJoining}
+        className={`w-full rounded-lg py-2.5 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-400 disabled:opacity-60 disabled:cursor-not-allowed ${joinButtonClasses}`}
+        aria-label={`${joinButtonLabel} for ${patient.name}`}
       >
         {isJoining ? (
           <span className="flex items-center justify-center gap-2">
@@ -78,9 +183,68 @@ export function PatientCard({
             Joining…
           </span>
         ) : (
-          "Join Session"
+          joinButtonLabel
         )}
       </button>
     </div>
+  );
+}
+
+// ── Inline SVG icons ──────────────────────────────────────────────────────────
+
+function BellIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+    </svg>
+  );
+}
+
+function VideoIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+  );
+}
+
+function ActivityIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 12h-4l-3 9L9 3l-3 9H2" />
+    </svg>
+  );
+}
+
+function LocationIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  );
+}
+
+function WifiIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+    </svg>
+  );
+}
+
+function BatteryIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7H7a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2V9a2 2 0 00-2-2h-2M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2M9 7h6" />
+    </svg>
+  );
+}
+
+function ClockIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
   );
 }

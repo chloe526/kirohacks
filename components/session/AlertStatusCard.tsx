@@ -63,8 +63,8 @@ export function AlertStatusCard({
         return (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-amber-500 animate-pulse" />
-              <h3 className="text-lg font-semibold text-amber-400">
+              <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+              <h3 className="text-sm font-semibold text-amber-400">
                 Help Request Pending
               </h3>
             </div>
@@ -80,8 +80,8 @@ export function AlertStatusCard({
         return (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-green-500" />
-              <h3 className="text-lg font-semibold text-green-400">
+              <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
+              <h3 className="text-sm font-semibold text-green-400">
                 Session in Progress
               </h3>
             </div>
@@ -95,10 +95,10 @@ export function AlertStatusCard({
         return (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
-              <h3 className="text-lg font-semibold text-red-400">ESCALATED</h3>
+              <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
+              <h3 className="text-sm font-semibold text-red-400">ESCALATED</h3>
             </div>
-            <p className="text-sm text-red-300 font-medium">
+            <p className="text-sm font-medium text-red-300">
               Emergency services have been dispatched
             </p>
           </div>
@@ -109,8 +109,8 @@ export function AlertStatusCard({
         return (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-slate-500" />
-              <h3 className="text-lg font-semibold text-slate-300">
+              <div className="h-2.5 w-2.5 rounded-full bg-slate-500" />
+              <h3 className="text-sm font-semibold text-slate-300">
                 No Active Alert
               </h3>
             </div>
