@@ -2,6 +2,7 @@ import os
 import server
 import datetime
 import stream_server
+import time
 
 
 def set_patient_info():
@@ -20,12 +21,13 @@ def main():
         return_code = os.system("python3 detect_voice.py")
 
         if return_code == 0:
-            time = datetime.datetime.now().isoformat()
+            time.sleep(2)
+            now = datetime.datetime.now().isoformat()
 
             server.state["status"] = "HELP_TRIGGERED"
-            server.state["help_event"]["triggered"] = time
+            server.state["help_event"]["triggered"] = now
 
-            print(f"Triggered help event at: {time}")
+            print(f"Triggered help event at: {now}")
 
             stream_server.main()            
         else:
