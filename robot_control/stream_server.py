@@ -210,101 +210,14 @@ HTML = b"""<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Robot Stream</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #0d0d0d; color: #e0e0e0;
-      font-family: system-ui, sans-serif;
-      display: flex; flex-direction: column; align-items: center;
-      min-height: 100vh; padding: 24px 16px; gap: 20px;
-    }
-    header { display: flex; align-items: center; gap: 10px; }
-    h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: #fff; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; background: #555; transition: background .3s; }
-    .dot.live  { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
-    .dot.error { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
-    .video-wrapper {
-      width: 100%; max-width: 960px; background: #1a1a1a;
-      border-radius: 10px; overflow: hidden; border: 1px solid #2a2a2a;
-    }
-    #feed { width: 100%; display: block; }
-    .placeholder {
-      display: flex; align-items: center; justify-content: center;
-      height: 300px; color: #555; font-size: .95rem; letter-spacing: .05em;
-    }
-    .controls { display: flex; gap: 12px; align-items: center; }
-    button {
-      background: #1f1f1f; color: #e0e0e0; border: 1px solid #333;
-      border-radius: 6px; padding: 8px 18px; font-size: .875rem;
-      cursor: pointer; transition: background .2s, border-color .2s;
-    }
-    button:hover { background: #2a2a2a; border-color: #555; }
-    .muted { color: #ef4444; border-color: #ef4444; }
-    #status { font-size: .8rem; color: #666; }
-    audio { display: none; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html { width: 100%; height: 100%; background: #000; overflow: hidden; }
+    img { width: 100%; height: 100%; object-fit: contain; display: block; }
   </style>
 </head>
 <body>
-  <header>
-    <div class="dot" id="dot"></div>
-    <h1>Robot Stream</h1>
-  </header>
-  <div class="video-wrapper">
-    <div class="placeholder" id="placeholder">Waiting for stream\u2026</div>
-    <img id="feed" alt="Live feed" style="display:none" />
-  </div>
-  <div class="controls">
-    <button onclick="reconnect()">Reconnect</button>
-    <button id="mute-btn" onclick="toggleMute()">Mute Audio</button>
-    <span id="status">Connecting\u2026</span>
-  </div>
-  <audio id="audio" autoplay></audio>
-  <script>
-    const feed = document.getElementById('feed');
-    const ph   = document.getElementById('placeholder');
-    const dot  = document.getElementById('dot');
-    const st   = document.getElementById('status');
-    const aud  = document.getElementById('audio');
-    const mb   = document.getElementById('mute-btn');
-    let muted  = false;
-
-    function startVideo() {
-      feed.src = '/video?t=' + Date.now();
-      feed.onload = () => {
-        ph.style.display = 'none'; feed.style.display = 'block';
-        dot.className = 'dot live'; st.textContent = 'Live';
-      };
-      feed.onerror = () => {
-        feed.style.display = 'none'; ph.style.display = 'flex';
-        dot.className = 'dot error'; st.textContent = 'Video error \u2014 try reconnecting';
-      };
-    }
-
-    function startAudio() {
-      aud.src = '/audio?t=' + Date.now();
-      aud.muted = muted;
-      aud.play().catch(() => {
-        st.textContent = 'Click anywhere to enable audio';
-        document.addEventListener('click', () => aud.play(), { once: true });
-      });
-    }
-
-    function toggleMute() {
-      muted = !muted; aud.muted = muted;
-      mb.textContent = muted ? 'Unmute Audio' : 'Mute Audio';
-      mb.classList.toggle('muted', muted);
-    }
-
-    function reconnect() {
-      st.textContent = 'Reconnecting\u2026'; dot.className = 'dot';
-      feed.style.display = 'none'; ph.style.display = 'flex';
-      ph.textContent = 'Reconnecting\u2026';
-      aud.src = ''; feed.src = '';
-      setTimeout(() => { startVideo(); startAudio(); }, 300);
-    }
-
-    startVideo();
-    startAudio();
-  </script>
+  <img src="/video" alt="Live feed" />
+  <audio autoplay src="/audio"></audio>
 </body>
 </html>"""
 
