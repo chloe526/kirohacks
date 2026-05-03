@@ -3,15 +3,12 @@
 from sys import exit
 import speech_recognition as sr
 
-should_exit = False
-
 def on_detect():
     """
     Updates state accordingly and starts the video call code.
     """
 
-    global should_exit
-    should_exit = True
+    exit(0)
     
 
 def needs_help(msg: str):
@@ -70,8 +67,7 @@ def main():
     )
 
     try:
-        global should_exit
-        while not should_exit:
+        while True:
             pass
     except KeyboardInterrupt:
         print("\nStopping...")
