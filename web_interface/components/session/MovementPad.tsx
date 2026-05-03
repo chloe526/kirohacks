@@ -38,7 +38,6 @@ export function MovementPad({
   onCommandSent,
 }: MovementPadProps) {
   const isDisabled = !robotOnline;
-  const offlineTooltip = isDisabled ? "Robot is offline" : undefined;
 
   return (
     <div
@@ -48,70 +47,60 @@ export function MovementPad({
     >
       {/* Row 1: Up button (centre column) */}
       <div className="col-start-2 row-start-1 flex justify-center">
-        <div title={offlineTooltip}>
-          <CommandButton
-            sessionId={sessionId}
-            action="up"
-            label="Move Up"
-            icon={<ArrowUp size={16} aria-hidden="true" />}
-            disabled={isDisabled}
-            onCommandSent={onCommandSent}
-          />
-        </div>
+        <CommandButton
+          sessionId={sessionId}
+          action="up"
+          label="Move Up"
+          icon={<ArrowUp size={16} aria-hidden="true" />}
+          disabled={isDisabled}
+          onCommandSent={onCommandSent}
+        />
       </div>
 
       {/* Row 2: Left, Stop, Right */}
       <div className="col-start-1 row-start-2 flex justify-center">
-        <div title={offlineTooltip}>
-          <CommandButton
-            sessionId={sessionId}
-            action="left"
-            label="Move Left"
-            icon={<ArrowLeft size={16} aria-hidden="true" />}
-            disabled={isDisabled}
-            onCommandSent={onCommandSent}
-          />
-        </div>
+        <CommandButton
+          sessionId={sessionId}
+          action="left"
+          label="Move Left"
+          icon={<ArrowLeft size={16} aria-hidden="true" />}
+          disabled={isDisabled}
+          onCommandSent={onCommandSent}
+        />
       </div>
 
       <div className="col-start-2 row-start-2 flex justify-center">
-        <div title={offlineTooltip}>
-          <CommandButton
-            sessionId={sessionId}
-            action="stop"
-            label="Stop"
-            icon={<StopCircle size={16} aria-hidden="true" />}
-            disabled={isDisabled}
-            onCommandSent={onCommandSent}
-          />
-        </div>
+        <CommandButton
+          sessionId={sessionId}
+          action="stop"
+          label="Stop"
+          icon={<StopCircle size={16} aria-hidden="true" />}
+          disabled={isDisabled}
+          onCommandSent={onCommandSent}
+        />
       </div>
 
       <div className="col-start-3 row-start-2 flex justify-center">
-        <div title={offlineTooltip}>
-          <CommandButton
-            sessionId={sessionId}
-            action="right"
-            label="Move Right"
-            icon={<ArrowRight size={16} aria-hidden="true" />}
-            disabled={isDisabled}
-            onCommandSent={onCommandSent}
-          />
-        </div>
+        <CommandButton
+          sessionId={sessionId}
+          action="right"
+          label="Move Right"
+          icon={<ArrowRight size={16} aria-hidden="true" />}
+          disabled={isDisabled}
+          onCommandSent={onCommandSent}
+        />
       </div>
 
       {/* Row 3: Down button (centre column) */}
       <div className="col-start-2 row-start-3 flex justify-center">
-        <div title={offlineTooltip}>
-          <CommandButton
-            sessionId={sessionId}
-            action="down"
-            label="Move Down"
-            icon={<ArrowDown size={16} aria-hidden="true" />}
-            disabled={isDisabled}
-            onCommandSent={onCommandSent}
-          />
-        </div>
+        <CommandButton
+          sessionId={sessionId}
+          action="down"
+          label="Move Down"
+          icon={<ArrowDown size={16} aria-hidden="true" />}
+          disabled={isDisabled}
+          onCommandSent={onCommandSent}
+        />
       </div>
     </div>
   );

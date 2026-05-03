@@ -104,7 +104,7 @@ export function CommandButton({
   const isDisabled = disabled || isInFlight;
 
   return (
-    <div className="flex flex-col items-center gap-1.5">
+    <div className="flex flex-col items-center">
       <button
         type="button"
         onClick={handleClick}
@@ -123,21 +123,6 @@ export function CommandButton({
         {icon && <span aria-hidden="true" className="[&>svg]:h-5 [&>svg]:w-5">{icon}</span>}
         <span className="sr-only">{label}</span>
       </button>
-      {/* 3-second status indicator — text-green-400 / text-red-400 kept for test assertions */}
-      {status !== "idle" && (
-        <span
-          role="status"
-          aria-live="polite"
-          className={[
-            "text-xs font-medium px-2 py-0.5 rounded-full",
-            status === "sent"
-              ? "text-green-400 bg-green-500/10"
-              : "text-red-400 bg-red-500/10",
-          ].join(" ")}
-        >
-          {status === "sent" ? "Command sent" : "Command failed"}
-        </span>
-      )}
     </div>
   );
 }
