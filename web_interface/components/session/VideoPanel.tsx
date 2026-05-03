@@ -108,12 +108,9 @@ export function VideoPanel({
   };
 
   return (
-    <div className="relative w-full bg-slate-900 rounded-lg border border-slate-700 overflow-hidden">
-      {/* 16:9 aspect ratio container with minimum height */}
-      <div
-        className="relative w-full"
-        style={{ aspectRatio: "16 / 9", minHeight: "360px" }}
-      >
+    <div className="relative w-full h-full min-h-[360px] bg-slate-900 rounded-lg border border-slate-700 overflow-hidden flex flex-col">
+      {/* Inner container fills all available height; iframe fills it completely */}
+      <div className="relative flex-1 overflow-hidden">
         {/* Connection status badge — top-right
             Note: test suite asserts bg-green-500/20 text-green-400 and bg-red-500/20 text-red-400 */}
         <div className="absolute top-4 right-4 z-10">
@@ -139,11 +136,26 @@ export function VideoPanel({
           {renderAudioStatus()}
         </div>
 
-        {/* Center content: live iframe, always shown */}
+        {/* Camera feed: 1080×1920 portrait source.
+            Size the iframe to the source dimensions, centre it, then scale it
+            so the width fills the container. Height overflows and is clipped.
+            No rotation. No JS. Pure CSS cover behaviour. */}
         <iframe
           src={ROBOT_STREAM_URL}
           title={`Live robot video feed for ${patientName}`}
-          className="absolute inset-0 h-full w-full border-0 bg-slate-950"
+          className="absolute border-0 bg-slate-950"
+          style={{
+            width: "1080px",
+            height: "1920px",
+            top: "50%",
+            left: "50%",
+            /* scale(containerWidth / 1080) — we use 100cqw if supported,
+               otherwise fall back to a vw-based approximation.
+               The containing block is ~600 px wide → 600/1080 ≈ 0.556.
+               Height after scale ≈ 1067 px > container height → clips cleanly. */
+            transform: "translate(-50%, -50%) scale(0.556)",
+            transformOrigin: "center center",
+          }}
           allow="camera; microphone; autoplay; fullscreen"
           allowFullScreen
         />

@@ -12,7 +12,6 @@ import { VideoPanel } from "@/components/session/VideoPanel";
 import { AlertStatusCard } from "@/components/session/AlertStatusCard";
 import { RobotStatusCard } from "@/components/session/RobotStatusCard";
 import { MovementPad } from "@/components/session/MovementPad";
-import { LastCommandPanel } from "@/components/session/LastCommandPanel";
 import { CommandLogConnected } from "@/components/session/CommandLog";
 import { DispatchConfirmDialog } from "@/components/modals/DispatchConfirmDialog";
 import { ReportModal } from "@/components/modals/ReportModal";
@@ -134,7 +133,7 @@ export default function SessionPage() {
       )}
 
       <div className="mx-auto max-w-screen-xl px-6 py-6">
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-stretch" style={{ minHeight: "calc(100vh - 80px)" }}>
           {/* Left: patient info + robot status */}
           <div className="lg:col-span-3 space-y-4">
             <PatientInfoCard
@@ -145,37 +144,36 @@ export default function SessionPage() {
             <RobotStatusCard robot={activePatient.robot} />
           </div>
 
-          {/* Centre: video + movement controls */}
-          <div className="lg:col-span-6 space-y-4">
+          {/* Centre: video only — stretches to full grid row height */}
+          <div className="lg:col-span-6 flex flex-col">
             {showSummaryView ? (
               <SummaryPanel patient={activePatient} />
             ) : (
-              <VideoPanel
-                patientName={activePatient.name}
-                robotConnection={activePatient.robot.connection}
-                sessionId={activePatient.session.session_id}
-                sessionActive={activePatient.session.active}
-              />
-            )}
-
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="mb-5 text-sm font-semibold text-slate-700">
-                Robot Movement Controls
-              </h3>
-              <div className="flex justify-center">
-                <MovementPad
-                  sessionId={activePatient.session.session_id ?? ""}
-                  robotOnline={robotOnline}
-                  onCommandSent={() => {}}
+              <div className="flex-1 flex flex-col">
+                <VideoPanel
+                  patientName={activePatient.name}
+                  robotConnection={activePatient.robot.connection}
+                  sessionId={activePatient.session.session_id}
+                  sessionActive={activePatient.session.active}
                 />
               </div>
-            </div>
-
-            <LastCommandPanel />
+            )}
           </div>
 
-          {/* Right: alert status + command log */}
+          {/* Right: movement controls + alert status + command log */}
           <div className="lg:col-span-3 space-y-4">
+            {/* Movement controls — top of right panel */}
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-6 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Controls
+              </p>
+              <MovementPad
+                sessionId={activePatient.session.session_id ?? ""}
+                robotOnline={robotOnline}
+                onCommandSent={() => {}}
+              />
+            </div>
+
             <AlertStatusCard
               status={activePatient.status}
               helpTriggeredAt={activePatient.help_event.triggered_at}
