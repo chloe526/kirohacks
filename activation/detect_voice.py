@@ -3,16 +3,6 @@
 from sys import exit
 import speech_recognition as sr
 
-should_exit = False
-
-def on_detect():
-    """
-    Updates state accordingly and starts the video call code.
-    """
-
-    global should_exit
-    should_exit = True
-    
 
 def needs_help(msg: str):
     """
@@ -66,12 +56,11 @@ def main():
 
     # phrase_time_limit caps how long a single chunk can be (avoids huge uploads)
     stop_listening = recognizer.listen_in_background(
-        mic, on_speech, phrase_time_limit=5
+        mic, exit, phrase_time_limit=5
     )
 
     try:
-        global should_exit
-        while not should_exit:
+        while True:
             pass
     except KeyboardInterrupt:
         print("\nStopping...")
