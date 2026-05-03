@@ -403,10 +403,6 @@ class StreamHandler(BaseHTTPRequestHandler):
                 input=True,
                 input_device_index=self._respeaker_index,
                 frames_per_buffer=AUDIO_CHUNK,
-                # Keep the ring buffer as small as possible so stale audio
-                # cannot accumulate between the time the stream is opened and
-                # the time the drain loop runs.
-                input_buffer_size=AUDIO_CHUNK * 4,
             )
         except OSError as exc:
             print(f"[audio] Failed to open stream: {exc}")
