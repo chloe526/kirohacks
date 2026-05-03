@@ -10,6 +10,8 @@ PUT /state examples:
     { "move": "down" }
     { "move": "stop" }
     { "status": "IDLE" }
+    { "return_audio": "audio_start" }
+    { "return_audio": "audio_stop" }
     { "session": { "active": true, "session_id": "abc" } }
 """
 
@@ -91,10 +93,15 @@ def _apply_status(value: str) -> None:
     state["status"] = value
     state["last_updated"] = datetime.datetime.now().isoformat()
 
+def _apply_audio_input(value: str) -> None:
+    import robot_interface
+    robot_interface.update_audio_input(str(value))
+
 
 _PUT_HANDLERS: dict[str, callable] = {
     "move":    _apply_move,
     "session": _apply_session,
+    "audio_input": _apply_audio_input,
     "status":  _apply_status,
 }
 

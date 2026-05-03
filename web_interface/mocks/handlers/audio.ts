@@ -1,25 +1,21 @@
 /**
  * mocks/handlers/audio.ts
  *
- * Mock handler for the audio WebSocket endpoint.
+ * Mock handler stubs for audio-related endpoints.
  *
- * In mock mode the website skips the real WebSocket and this handler acts as
- * a no-op placeholder. MSW 2 does not natively intercept WebSocket connections
- * in the browser, so this file documents the expected endpoint and provides a
- * server-side no-op for test environments.
+ * Incoming audio (robot→doctor):
+ *   wss://{host}/api/v1/sessions/{session_id}/audio
+ *   Handled entirely inside useAudioSocket via NEXT_PUBLIC_USE_MOCK_API flag.
  *
- * Expected endpoint: wss://{host}/api/v1/sessions/{session_id}/audio
+ * Outgoing audio (doctor→robot) — doctor-to-robot-audio spec:
+ *   ws://{robotHost}:8080/audio-input
+ *   MSW v2 browser mode does not intercept WebSocket connections, so mock
+ *   behaviour is handled inside useMicCapture via NEXT_PUBLIC_USE_MOCK_API.
+ *   When NEXT_PUBLIC_USE_MOCK_API=true, useMicCapture skips getUserMedia and
+ *   the WebSocket entirely, reporting connectionState='connected' + isMuted=true.
  *
- * In the real implementation the robot streams binary audio frames over this
- * socket. The website pipes them to a Web Audio API AudioContext for playback.
- *
- * When NEXT_PUBLIC_USE_MOCK_API=true, useAudioSocket skips the WebSocket
- * entirely and returns connectionState: 'connected' immediately, rendering
- * a static "Audio (mocked)" badge in VideoPanel.
+ * This file exports empty handler arrays so it can be safely imported by
+ * mocks/handlers/index.ts without side effects.
  */
-
-// No MSW handler is registered here because MSW 2 browser mode does not
-// intercept WebSocket connections. The mock behaviour is handled entirely
-// inside the useAudioSocket hook via the NEXT_PUBLIC_USE_MOCK_API env flag.
 
 export const audioHandlers: never[] = [];

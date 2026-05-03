@@ -47,3 +47,11 @@ export const PLAN_MAX_CHARS = 1_000;
 
 /** Battery percentage at or below which the "Low Battery" warning is shown */
 export const BATTERY_LOW_THRESHOLD = 20;
+
+// ── Robot stream server (doctor-to-robot-audio) ───────────────────────────────
+
+/** Robot stream server host for direct WebSocket connections */
+export const ROBOT_STREAM_HOST = "10.40.98.25";
+
+/** Port for the robot stream server (video + audio-input WebSocket) */
+export const ROBOT_STREAM_PORT = 8080;
