@@ -50,7 +50,7 @@ state: dict = {
 }
 
 
-HOST = "localhost"
+HOST = "0.0.0.0"
 PORT = 8081
 
 
