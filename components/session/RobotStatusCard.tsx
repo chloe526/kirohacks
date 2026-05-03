@@ -46,15 +46,15 @@ export function RobotStatusCard({ robot }: RobotStatusCardProps) {
       )}
 
       {/* Robot Status Card — bg-slate-800 kept for test assertion */}
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+      <div className="bg-slate-800 rounded-lg border border-slate-700 p-5">
+        <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
           Robot Status
         </h3>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* Connection Status */}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-300">Connection</span>
+            <span className="text-sm text-slate-400">Connection</span>
             <div className="flex items-center gap-1.5">
               <Circle
                 className={`h-2.5 w-2.5 fill-current ${
@@ -64,7 +64,7 @@ export function RobotStatusCard({ robot }: RobotStatusCardProps) {
               />
               {/* text-green-400 / text-red-400 kept for test assertions */}
               <span
-                className={`text-sm font-medium ${
+                className={`text-sm font-semibold ${
                   isOnline ? "text-green-400" : "text-red-400"
                 }`}
               >
@@ -74,7 +74,7 @@ export function RobotStatusCard({ robot }: RobotStatusCardProps) {
           </div>
 
           {/* Battery Level */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <Battery
@@ -83,12 +83,12 @@ export function RobotStatusCard({ robot }: RobotStatusCardProps) {
                   }`}
                   aria-hidden="true"
                 />
-                <span className="text-sm text-slate-300">Battery</span>
+                <span className="text-sm text-slate-400">Battery</span>
               </div>
               {/* text-red-400 kept for test assertion */}
               <span
-                className={`text-sm font-medium ${
-                  isLowBattery ? "text-red-400" : "text-slate-300"
+                className={`text-sm font-semibold ${
+                  isLowBattery ? "text-red-400" : "text-slate-200"
                 }`}
               >
                 {robot.battery}%
@@ -96,7 +96,7 @@ export function RobotStatusCard({ robot }: RobotStatusCardProps) {
             </div>
 
             {/* Battery Progress Bar */}
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-700">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-700">
               <div
                 className={`h-full transition-all duration-300 ${
                   isLowBattery ? "bg-red-500" : "bg-green-500"
@@ -118,10 +118,10 @@ export function RobotStatusCard({ robot }: RobotStatusCardProps) {
           </div>
 
           {/* Last Command */}
-          <div className="border-t border-slate-700 pt-3 space-y-0.5">
+          <div className="border-t border-slate-700 pt-4 space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-300">Last Command</span>
-              <span className="text-sm font-medium text-slate-200 capitalize">
+              <span className="text-sm text-slate-400">Last Command</span>
+              <span className="text-sm font-semibold text-slate-200 capitalize">
                 {robot.last_command || "None"}
               </span>
             </div>

@@ -25,10 +25,10 @@ export function LastCommandPanel() {
   const commandStatus = useCommandStore((s) => s.commandStatus);
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
       {/* Panel header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <h3 className="text-sm font-semibold text-slate-700">
           Last Command Sent
         </h3>
 
@@ -37,7 +37,7 @@ export function LastCommandPanel() {
           <span
             role="status"
             aria-live="polite"
-            className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-200"
+            className="rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-200"
           >
             Command sent
           </span>
@@ -46,7 +46,7 @@ export function LastCommandPanel() {
           <span
             role="status"
             aria-live="polite"
-            className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-red-200"
+            className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 ring-1 ring-red-200"
           >
             Command failed
           </span>
@@ -59,7 +59,7 @@ export function LastCommandPanel() {
       ) : (
         <pre
           aria-label="Last command JSON"
-          className="overflow-x-auto whitespace-pre rounded-md border border-slate-100 bg-slate-50 p-3 font-mono text-xs leading-relaxed text-slate-700"
+          className="overflow-x-auto whitespace-pre rounded-lg border border-slate-100 bg-slate-50 p-3 font-mono text-xs leading-relaxed text-slate-600"
         >
           {JSON.stringify(lastCommand, null, 2)}
         </pre>

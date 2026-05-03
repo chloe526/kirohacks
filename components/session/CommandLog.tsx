@@ -28,23 +28,23 @@ interface CommandLogProps {
  */
 export function CommandLog({ commands }: CommandLogProps) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
       {/* Panel header */}
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <h3 className="text-sm font-semibold text-slate-700">
         Command Log
       </h3>
 
       {commands.length === 0 ? (
-        <p className="text-sm italic text-slate-400">No commands sent yet</p>
+        <p className="text-sm text-slate-400 italic">No commands sent yet</p>
       ) : (
         <ul
           aria-label="Command log"
-          className="max-h-60 space-y-1 overflow-y-auto pr-1"
+          className="max-h-56 space-y-1.5 overflow-y-auto pr-1"
         >
           {commands.map((cmd, index) => (
             <li
               key={`${cmd.issued_at}-${index}`}
-              className="flex items-center justify-between rounded-md border border-slate-100 bg-slate-50 px-3 py-1.5"
+              className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
             >
               <span className="text-sm font-medium capitalize text-slate-700">
                 {cmd.action}

@@ -51,24 +51,12 @@ export function SessionTimer({ startedAt }: SessionTimerProps) {
   ].join(":");
 
   return (
-    <div
-      className="flex items-center gap-1.5 text-sm text-slate-500"
+    <span
+      className="font-mono text-sm font-semibold tabular-nums text-slate-700"
       aria-live="off"
       aria-label={`Session duration: ${formatted}`}
     >
-      <svg
-        className="h-3.5 w-3.5 text-slate-400"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="10" strokeWidth="2" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2" />
-      </svg>
-      <span className="font-mono text-sm font-medium text-slate-700">
-        {formatted}
-      </span>
-    </div>
+      {formatted}
+    </span>
   );
 }

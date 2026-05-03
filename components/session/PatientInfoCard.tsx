@@ -39,26 +39,33 @@ export function PatientInfoCard({
   }
 
   return (
-    <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-      {/* Avatar placeholder */}
-      <div className="mb-4 flex justify-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-700">
-          <User className="h-8 w-8 text-slate-400" aria-hidden="true" />
-        </div>
-      </div>
-
-      {/* Patient Name */}
-      <h2 className="mb-1 text-center text-xl font-semibold text-slate-100">
-        {name}
+    <div className="bg-slate-800 rounded-lg border border-slate-700 p-5">
+      {/* Header */}
+      <h2 className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        Patient Info
       </h2>
 
-      {/* Divider */}
-      <div className="my-3 border-t border-slate-700" />
+      {/* Avatar + name */}
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-slate-700">
+          <User className="h-5 w-5 text-slate-400" aria-hidden="true" />
+        </div>
+        <p className="text-base font-semibold text-slate-100">{name}</p>
+      </div>
 
-      {/* Address */}
-      <div className="space-y-0.5 text-center">
-        <p className="text-sm text-slate-300">{addressLine1}</p>
-        <p className="text-sm text-slate-400">{addressLine2}</p>
+      {/* Divider */}
+      <div className="mb-4 border-t border-slate-700" />
+
+      {/* Fields */}
+      <div className="space-y-3">
+        <div>
+          <p className="mb-0.5 text-xs font-medium text-slate-500">Location</p>
+          <p className="text-sm font-medium text-slate-200">{addressLine1}</p>
+        </div>
+        <div className="border-t border-slate-700/60 pt-3">
+          <p className="mb-0.5 text-xs font-medium text-slate-500">Address</p>
+          <p className="text-sm text-slate-300">{addressLine2}</p>
+        </div>
       </div>
     </div>
   );

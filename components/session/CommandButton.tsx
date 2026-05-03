@@ -88,7 +88,7 @@ export function CommandButton({
   const isDisabled = disabled || isInFlight;
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex flex-col items-center gap-1.5">
       <button
         type="button"
         onClick={handleClick}
@@ -96,16 +96,16 @@ export function CommandButton({
         aria-label={label}
         aria-busy={isInFlight}
         className={[
-          "flex h-11 w-11 items-center justify-center rounded-lg",
-          "text-sm font-medium transition-colors duration-150",
+          "flex h-14 w-14 items-center justify-center rounded-xl",
+          "text-sm font-medium transition-all duration-150",
           "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
           isDisabled
-            ? "cursor-not-allowed bg-slate-100 text-slate-300"
-            : "bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300 cursor-pointer",
+            ? "cursor-not-allowed bg-slate-100 text-slate-300 opacity-60"
+            : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm active:bg-slate-100 active:scale-95 cursor-pointer shadow-sm",
         ].join(" ")}
       >
-        {icon && <span aria-hidden="true">{icon}</span>}
-        <span>{label}</span>
+        {icon && <span aria-hidden="true" className="[&>svg]:h-5 [&>svg]:w-5">{icon}</span>}
+        <span className="sr-only">{label}</span>
       </button>
       {/* 3-second status indicator — text-green-400 / text-red-400 kept for test assertions */}
       {status !== "idle" && (
@@ -113,7 +113,7 @@ export function CommandButton({
           role="status"
           aria-live="polite"
           className={[
-            "text-xs font-medium px-2 py-0.5 rounded",
+            "text-xs font-medium px-2 py-0.5 rounded-full",
             status === "sent"
               ? "text-green-400 bg-green-500/10"
               : "text-red-400 bg-red-500/10",
