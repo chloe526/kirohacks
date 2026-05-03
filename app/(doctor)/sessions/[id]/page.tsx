@@ -10,6 +10,9 @@ import { SessionHeader } from "@/components/session/SessionHeader";
 import { PatientInfoCard } from "@/components/session/PatientInfoCard";
 import { VideoPanel } from "@/components/session/VideoPanel";
 import { AlertStatusCard } from "@/components/session/AlertStatusCard";
+import { DispatchConfirmDialog } from "@/components/modals/DispatchConfirmDialog";
+import { ReportModal } from "@/components/modals/ReportModal";
+import { Banner } from "@/components/ui/Banner";
 
 /**
  * SessionPage
@@ -46,6 +49,11 @@ export default function SessionPage() {
     setActivePatient,
     openReportModal,
     openDispatchDialog,
+    isReportModalOpen,
+    closeReportModal,
+    isDispatchDialogOpen,
+    closeDispatchDialog,
+    patchActivePatient,
   } = usePatientStore();
 
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -94,6 +102,13 @@ export default function SessionPage() {
     }
   }, [activePatient?.status, activePatient?.session.ended_at]);
 
+  // Handle successful dispatch
+  const handleDispatchSuccess = () => {
+    // Optimistically update patient status to ESCALATED
+    patchActivePatient({ status: "ESCALATED" });
+    closeDispatchDialog();
+  };
+
   // Loading state
   if (isLoadingActive || !activePatient) {
     return (
@@ -129,6 +144,15 @@ export default function SessionPage() {
         onDispatch={openDispatchDialog}
       />
 
+      {/* Persistent EMS Dispatch Banner */}
+      {activePatient.status === "ESCALATED" && (
+        <Banner
+          message="Emergency services have been dispatched"
+          variant="error"
+          className="sticky top-[73px] z-40"
+        />
+      )}
+
       {/* Three-panel layout */}
       <div className="container mx-auto px-6 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -149,6 +173,8 @@ export default function SessionPage() {
               <VideoPanel
                 patientName={activePatient.name}
                 robotConnection={activePatient.robot.connection}
+                sessionId={activePatient.session.session_id}
+                sessionActive={activePatient.session.active}
               />
             )}
           </div>
@@ -182,9 +208,32 @@ export default function SessionPage() {
         </div>
       </div>
 
-      {/* Modals will be added in future milestones */}
-      {/* TODO Milestone 6: DispatchConfirmDialog */}
-      {/* TODO Milestone 7: ReportModal */}
+      {/* Modals */}
+      <DispatchConfirmDialog
+        isOpen={isDispatchDialogOpen}
+        patientName={activePatient.name}
+        addressLine1={activePatient.address.line1}
+        addressLine2={activePatient.address.line2}
+        sessionId={activePatient.session.session_id || ""}
+        patientId={activePatient.patient_id}
+        onSuccess={handleDispatchSuccess}
+        onCancel={closeDispatchDialog}
+      />
+      
+      {/* Report Modal */}
+      {activePatient.session.started_at && (
+        <ReportModal
+          isOpen={isReportModalOpen}
+          sessionId={activePatient.session.session_id || ""}
+          patientName={activePatient.name}
+          durationSeconds={Math.floor(
+            (Date.now() - new Date(activePatient.session.started_at).getTime()) / 1000
+          )}
+          clinicianId="doc-456" // TODO: Get from auth context
+          onSuccess={closeReportModal}
+          onDismiss={closeReportModal}
+        />
+      )}
     </div>
   );
 }

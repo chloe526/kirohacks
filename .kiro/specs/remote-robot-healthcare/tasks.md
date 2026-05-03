@@ -134,11 +134,11 @@
 ---
 
 - [x] 4.1 Create `stores/commandStore.ts` (Zustand): `lastCommand: RobotCommand | null`, `commandStatus: 'idle' | 'acknowledged' | 'failed'`, `log: RobotCommand[]` (max `COMMAND_LOG_MAX`), `addCommand(cmd, success)`, `setCommandStatus()`
-- [ ] 4.2 Build `components/session/RobotStatusCard.tsx`: online/offline dot from `robot.connection`, battery progress bar (red + "Low Battery" when `robot.battery ≤ 20`), `robot.last_command` label, `robot.last_command_at` via `formatLastCommand`; amber offline banner when `robot.connection === 'offline'`
-- [ ] 4.3 Build `components/session/CommandButton.tsx`: accepts `sessionId`, `action: RobotAction`, `label`, `icon`, `disabled`; on click builds `RobotCommand { session_id, action, issued_at: now() }`, POSTs to `/api/v1/sessions/{sessionId}/commands`, calls `commandStore.addCommand`, patches `patientStore.activePatient.robot.last_command` and `last_command_at`; shows 3 s "Command sent" / "Command failed" indicator
-- [ ] 4.4 Build `components/session/MovementPad.tsx`: renders five `CommandButton` instances for `left`, `right`, `up`, `down`, `stop` in a D-pad layout; all disabled when `robotOnline === false` with tooltip "Robot is offline"
-- [ ] 4.5 Build `components/session/LastCommandPanel.tsx`: renders `commandStore.lastCommand` as indented JSON in a `<pre>` block; shows "Command sent" (green) or "Command failed" (red) badge from `commandStore.commandStatus`; shows placeholder text "No commands sent yet" when `lastCommand` is null
-- [ ] 4.6 Build `components/session/CommandLog.tsx`: scrollable list of last 20 `RobotCommand` entries from `commandStore.log`; each row shows `cmd.action` and `formatLocalTime(cmd.issued_at)`; newest entry at top
+- [x] 4.2 Build `components/session/RobotStatusCard.tsx`: online/offline dot from `robot.connection`, battery progress bar (red + "Low Battery" when `robot.battery ≤ 20`), `robot.last_command` label, `robot.last_command_at` via `formatLastCommand`; amber offline banner when `robot.connection === 'offline'`
+- [x] 4.3 Build `components/session/CommandButton.tsx`: accepts `sessionId`, `action: RobotAction`, `label`, `icon`, `disabled`; on click builds `RobotCommand { session_id, action, issued_at: now() }`, POSTs to `/api/v1/sessions/{sessionId}/commands`, calls `commandStore.addCommand`, patches `patientStore.activePatient.robot.last_command` and `last_command_at`; shows 3 s "Command sent" / "Command failed" indicator
+- [x] 4.4 Build `components/session/MovementPad.tsx`: renders five `CommandButton` instances for `left`, `right`, `up`, `down`, `stop` in a D-pad layout; all disabled when `robotOnline === false` with tooltip "Robot is offline"
+- [x] 4.5 Build `components/session/LastCommandPanel.tsx`: renders `commandStore.lastCommand` as indented JSON in a `<pre>` block; shows "Command sent" (green) or "Command failed" (red) badge from `commandStore.commandStatus`; shows placeholder text "No commands sent yet" when `lastCommand` is null
+- [x] 4.6 Build `components/session/CommandLog.tsx`: scrollable list of last 20 `RobotCommand` entries from `commandStore.log`; each row shows `cmd.action` and `formatLocalTime(cmd.issued_at)`; newest entry at top
 
 **Acceptance criteria:**
 - Clicking each of the five buttons POSTs the correct `{ session_id, action, issued_at }` JSON
@@ -165,11 +165,11 @@
 
 ---
 
-- [ ] 5.1 Create `hooks/useAudioSocket.ts`: accepts `sessionId: string | null` and `active: boolean`; when `active` is true opens `WebSocket` at `wss://{host}/api/v1/sessions/{sessionId}/audio`; exposes `connectionState: 'connecting' | 'connected' | 'disconnected'`, `isMuted: boolean`, `toggleMute()`, and `reconnectCount: number`; on close/error retries up to `AUDIO_RECONNECT_ATTEMPTS` times with `AUDIO_RECONNECT_DELAY_MS` delay; cleans up on unmount or when `active` becomes false
-- [ ] 5.2 Pipe WebSocket binary frames to a Web Audio API `AudioContext`: in `useAudioSocket`, decode incoming `ArrayBuffer` messages via `AudioContext.decodeAudioData` and schedule playback; suspend `AudioContext` when muted, resume when unmuted
-- [ ] 5.3 Integrate `useAudioSocket` into `VideoPanel.tsx`: pass `sessionId` and `sessionActive` props; render audio status indicator — green mic icon ("Audio connected") when `connected`, red strikethrough mic ("Audio disconnected") when `disconnected`, amber spinner when `connecting`; show "Reconnecting audio… (attempt N/3)" during retry
-- [ ] 5.4 Add mute/unmute toggle button to `VideoPanel`: calls `toggleMute()` from the hook; button label and icon reflect `isMuted` state; button is disabled when `connectionState !== 'connected'`
-- [ ] 5.5 Mock mode fallback: when `NEXT_PUBLIC_USE_MOCK_API=true`, `useAudioSocket` skips the WebSocket entirely and returns `connectionState: 'connected'` immediately; `VideoPanel` renders a static "Audio (mocked)" badge in place of the live indicator
+- [x] 5.1 Create `hooks/useAudioSocket.ts`: accepts `sessionId: string | null` and `active: boolean`; when `active` is true opens `WebSocket` at `wss://{host}/api/v1/sessions/{sessionId}/audio`; exposes `connectionState: 'connecting' | 'connected' | 'disconnected'`, `isMuted: boolean`, `toggleMute()`, and `reconnectCount: number`; on close/error retries up to `AUDIO_RECONNECT_ATTEMPTS` times with `AUDIO_RECONNECT_DELAY_MS` delay; cleans up on unmount or when `active` becomes false
+- [x] 5.2 Pipe WebSocket binary frames to a Web Audio API `AudioContext`: in `useAudioSocket`, decode incoming `ArrayBuffer` messages via `AudioContext.decodeAudioData` and schedule playback; suspend `AudioContext` when muted, resume when unmuted
+- [x] 5.3 Integrate `useAudioSocket` into `VideoPanel.tsx`: pass `sessionId` and `sessionActive` props; render audio status indicator — green mic icon ("Audio connected") when `connected`, red strikethrough mic ("Audio disconnected") when `disconnected`, amber spinner when `connecting`; show "Reconnecting audio… (attempt N/3)" during retry
+- [x] 5.4 Add mute/unmute toggle button to `VideoPanel`: calls `toggleMute()` from the hook; button label and icon reflect `isMuted` state; button is disabled when `connectionState !== 'connected'`
+- [x] 5.5 Mock mode fallback: when `NEXT_PUBLIC_USE_MOCK_API=true`, `useAudioSocket` skips the WebSocket entirely and returns `connectionState: 'connected'` immediately; `VideoPanel` renders a static "Audio (mocked)" badge in place of the live indicator
 
 **Acceptance criteria:**
 - In mock mode, `VideoPanel` shows "Audio (mocked)" badge and mute toggle is functional
@@ -196,11 +196,11 @@
 
 ---
 
-- [ ] 6.1 Build `components/modals/DispatchConfirmDialog.tsx`: modal overlay showing `patient.name`, `patient.address.line1 + line2`, and a required "Reason for dispatch" textarea; "Confirm Dispatch" button disabled until reason length ≥ `DISPATCH_REASON_MIN_CHARS`; "Cancel" closes dialog without action
-- [ ] 6.2 On confirm: construct `DispatchRequest { session_id, patient_id, reason, address, requested_at: now() }` and POST to `/api/v1/dispatch`; show loading state on confirm button during request
-- [ ] 6.3 On successful dispatch response: close dialog, optimistically patch `patientStore.activePatient.status → ESCALATED`, display a persistent banner "Emergency services have been dispatched" (non-dismissable)
-- [ ] 6.4 Handle HTTP 409 (duplicate dispatch): show inline message "Emergency services were already dispatched for this session" inside the dialog and close after 2 seconds
-- [ ] 6.5 Wire dispatch button in `SessionHeader.tsx`: calls `patientStore.openDispatchDialog()`; when `patient.status === 'ESCALATED'` button is disabled and labelled "Dispatched ✓" in a muted style (not red)
+- [x] 6.1 Build `components/modals/DispatchConfirmDialog.tsx`: modal overlay showing `patient.name`, `patient.address.line1 + line2`, and a required "Reason for dispatch" textarea; "Confirm Dispatch" button disabled until reason length ≥ `DISPATCH_REASON_MIN_CHARS`; "Cancel" closes dialog without action
+- [x] 6.2 On confirm: construct `DispatchRequest { session_id, patient_id, reason, address, requested_at: now() }` and POST to `/api/v1/dispatch`; show loading state on confirm button during request
+- [x] 6.3 On successful dispatch response: close dialog, optimistically patch `patientStore.activePatient.status → ESCALATED`, display a persistent banner "Emergency services have been dispatched" (non-dismissable)
+- [x] 6.4 Handle HTTP 409 (duplicate dispatch): show inline message "Emergency services were already dispatched for this session" inside the dialog and close after 2 seconds
+- [x] 6.5 Wire dispatch button in `SessionHeader.tsx`: calls `patientStore.openDispatchDialog()`; when `patient.status === 'ESCALATED'` button is disabled and labelled "Dispatched ✓" in a muted style (not red)
 
 **Acceptance criteria:**
 - "Confirm Dispatch" button is disabled until reason has ≥ 10 characters
@@ -229,12 +229,12 @@
 
 ---
 
-- [ ] 7.1 Build `components/modals/ReportForm.tsx`: fields — `chief_complaint` (textarea, max 500 chars, required), `assessment` (textarea, max 1000 chars, required), `plan` (textarea, max 1000 chars, required), `disposition` (radio: "Resolved" / "Follow-up Required" / "Escalate to Emergency Services"); read-only header showing `session_id`, `patient.name`, and elapsed duration from `formatDuration(session.started_at)`; inline validation errors on empty required fields; character counter on each textarea
-- [ ] 7.2 Build `components/modals/ReportModal.tsx`: wraps `ReportForm` in a modal overlay; on submit constructs `ReportPayload { session_id, clinician_id, chief_complaint, assessment, plan, disposition, duration_seconds, submitted_at: now() }` and POSTs to `/api/v1/reports`; shows loading state on submit button; on HTTP 201 closes modal and fires success toast; on HTTP 422 displays server field errors inside form without closing
-- [ ] 7.3 Build `components/modals/EndSessionConfirmDialog.tsx`: shown when clinician dismisses the report modal without submitting; message "Are you sure? The session will remain open until a report is submitted."; "Go Back" returns to report form, "Leave Anyway" closes both dialogs
-- [ ] 7.4 Build `components/ui/Toast.tsx`: temporary notification (3 s auto-dismiss) rendered at top-right; accepts `message: string` and `variant: 'success' | 'error'`
-- [ ] 7.5 On successful report submission: optimistically patch `patientStore.activePatient` — set `status → IDLE`, `session.ended_at → now()`, `session.active → false`; show success toast "Report submitted successfully"
-- [ ] 7.6 Wire "End Session" button in `SessionHeader.tsx`: calls `patientStore.openReportModal()`; button is disabled when `patient.status` is not `IN_SESSION`
+- [x] 7.1 Build `components/modals/ReportForm.tsx`: fields — `chief_complaint` (textarea, max 500 chars, required), `assessment` (textarea, max 1000 chars, required), `plan` (textarea, max 1000 chars, required), `disposition` (radio: "Resolved" / "Follow-up Required" / "Escalate to Emergency Services"); read-only header showing `session_id`, `patient.name`, and elapsed duration from `formatDuration(session.started_at)`; inline validation errors on empty required fields; character counter on each textarea
+- [x] 7.2 Build `components/modals/ReportModal.tsx`: wraps `ReportForm` in a modal overlay; on submit constructs `ReportPayload { session_id, clinician_id, chief_complaint, assessment, plan, disposition, duration_seconds, submitted_at: now() }` and POSTs to `/api/v1/reports`; shows loading state on submit button; on HTTP 201 closes modal and fires success toast; on HTTP 422 displays server field errors inside form without closing
+- [x] 7.3 Build `components/modals/EndSessionConfirmDialog.tsx`: shown when clinician dismisses the report modal without submitting; message "Are you sure? The session will remain open until a report is submitted."; "Go Back" returns to report form, "Leave Anyway" closes both dialogs
+- [x] 7.4 Build `components/ui/Toast.tsx`: temporary notification (3 s auto-dismiss) rendered at top-right; accepts `message: string` and `variant: 'success' | 'error'`
+- [x] 7.5 On successful report submission: optimistically patch `patientStore.activePatient` — set `status → IDLE`, `session.ended_at → now()`, `session.active → false`; show success toast "Report submitted successfully"
+- [x] 7.6 Wire "End Session" button in `SessionHeader.tsx`: calls `patientStore.openReportModal()`; button is disabled when `patient.status` is not `IN_SESSION`
 
 **Acceptance criteria:**
 - Report form shows inline validation errors when any required field is empty on submit
@@ -261,8 +261,8 @@
 
 ---
 
-- [ ] 8.1 Build `components/patient/PatientStatusPage.tsx`: fetches `PatientRecord` from `GET /api/v1/patients/{patient_id}` on mount; polls every `PATIENT_STATUS_POLL_MS`; displays first name from `patient.name` as greeting at top of page
-- [ ] 8.2 Render status message in ≥ 24px font based on `patient.status`: `IDLE` → "No active session", `HELP_TRIGGERED` → "Help request received — connecting you to a clinician…", `IN_SESSION` → "A clinician is with you now", `ESCALATED` → "Emergency services have been contacted"
+- [x] 8.1 Build `components/patient/PatientStatusPage.tsx`: fetches `PatientRecord` from `GET /api/v1/patients/{patient_id}` on mount; polls every `PATIENT_STATUS_POLL_MS`; displays first name from `patient.name` as greeting at top of page
+- [x] 8.2 Render status message in ≥ 24px font based on `patient.status`: `IDLE` → "No active session", `HELP_TRIGGERED` → "Help request received — connecting you to a clinician…", `IN_SESSION` → "A clinician is with you now", `ESCALATED` → "Emergency services have been contacted"
 - [ ] 8.3 When `patient.status === 'HELP_TRIGGERED'` and `help_event.triggered_at` is non-null, display "Help requested X minutes ago" beneath the status message using `formatRelativeTime`; update every second
 - [ ] 8.4 When `patient.status === 'IN_SESSION'` and `session.started_at` is non-null, display "Session in progress for X minutes" beneath the status message using `formatDuration`; update every second
 - [ ] 8.5 Apply status-appropriate background colour to the full page: neutral for `IDLE`, amber tint for `HELP_TRIGGERED`, green tint for `IN_SESSION`, red tint for `ESCALATED`; ensure no clinical data, robot controls, or report elements are present
