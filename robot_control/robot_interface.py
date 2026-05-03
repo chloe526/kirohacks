@@ -155,7 +155,7 @@ def update_battery() -> None:
     # linear interpolation between 10.0 and 13.8 volts to percentage
     # 10.0V is 0%, 13.8V is 100%
     out = min(1, max(0, (voltage - 10.0) / 3.8)) * 100
-    out = round(out, 3)
+    out = round(out, 1)
 
 
     server.state["robot"]["battery"] = out
