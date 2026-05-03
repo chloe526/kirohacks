@@ -36,7 +36,7 @@ DEFAULT_PORT = 8080
 
 # Video
 DEFAULT_DEVICE_INDEX = 0
-DEFAULT_PROFILE_INDEX = -1  # -1 = highest resolution
+DEFAULT_PROFILE_INDEX = 186  # -1 = highest resolution
 JPEG_QUALITY = 80
 
 # Audio (ReSpeaker mic array)
