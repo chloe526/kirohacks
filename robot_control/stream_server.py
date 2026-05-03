@@ -28,6 +28,8 @@ import cv2
 import numpy as np
 import pyaudio
 import pyrealsense2 as rs
+import server
+import datetime
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -367,6 +369,10 @@ def main() -> None:
     local_ip = socket.gethostbyname(socket.gethostname())
     print(f"Stream server running at http://{local_ip}:{args.port}")
     print("Press Ctrl+C to stop.")
+
+    server.state["status"] = "CALL_READY"
+    now = datetime.datetime.now().isoformat()
+    server.state["help_event"]["triggered"] = now
 
     try:
         httpd.serve_forever()

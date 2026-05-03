@@ -17,7 +17,7 @@ state: dict = {
         "line2": ""
     },
 
-    # IDLE | HELP_TRIGGERED | IN_SESSION | ESCALATED
+    # IDLE | HELP_TRIGGERED | CALL_READY
     "status": "IDLE",
 
     # ISO_8601_TIMESTAMP

@@ -18,14 +18,18 @@ def main():
     server.start_server()
 
     while True:
+        server.state["status"] = "IDLE"
+        now = datetime.datetime.now().isoformat()
+        server.state["help_event"]["triggered"] = now
+
         return_code = os.system("python3 detect_voice.py")
 
         if return_code == 0:
             # time.sleep(5)
             now = datetime.datetime.now().isoformat()
+            server.state["help_event"]["triggered"] = now
 
             server.state["status"] = "HELP_TRIGGERED"
-            server.state["help_event"]["triggered"] = now
 
             print(f"Triggered help event at: {now}")
 
