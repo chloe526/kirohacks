@@ -9,8 +9,8 @@ import time
 def set_patient_info():
     server.state["patient_id"] = "pat-0001"
     server.state["name"] = "John Doe"
-    server.state["address"]["line1"] = "1234 Imaginary Ave"
-    server.state["address"]["line2"] = "City State 12345"
+    server.state["address"]["line1"] = "1 Grand Ave"
+    server.state["address"]["line2"] = "San Luis Obispo 93407"
     server.state["last_update"] = datetime.datetime.now().isoformat()
 
 
